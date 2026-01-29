@@ -1,0 +1,159 @@
+# Springpod Discovery Simulator
+
+An interactive training tool where students practice interviewing virtual clients to uncover business requirements. Features a retro 8-bit aesthetic and AI-powered conversations.
+
+## Overview
+
+Students select from three fictional client scenarios and conduct discovery interviews. The AI clients respond realistically, withholding key information until students ask the right questions—just like real client interactions.
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- OpenRouter API key ([get one here](https://openrouter.ai/keys))
+
+### Installation
+
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd client-AI-chat-bot
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+```
+
+Edit `.env.local` and add your OpenRouter API key:
+```
+OPENROUTER_API_KEY=your_key_here
+```
+
+### Running Locally
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
+
+## Client Scenarios
+
+| Client | Company | Challenge |
+|--------|---------|-----------|
+| **Gareth Lawson** | Kindrell (Banking) | Slow customer onboarding due to legacy systems |
+| **Marco Santos** | Panther Motors | Design covers for vehicle connection points |
+| **Emma Richardson** | Innovation District Manchester | Community engagement for local impact |
+
+Each scenario has hidden requirements that students must discover through effective questioning.
+
+## Features
+
+### Core Functionality
+- **AI-Powered Conversations** - Realistic client responses via Claude 3.5 Sonnet
+- **15-Turn Limit** - Simulates real meeting time pressure
+- **Thinking Delay** - 800ms pause makes responses feel natural
+
+### User Experience
+- **8-Bit Theme** - Retro pixel art avatars and terminal aesthetic
+- **Markdown Support** - AI responses render with proper formatting
+- **Auto-Scroll** - Chat automatically follows new messages
+- **Mobile Responsive** - Works on phones and tablets
+
+### Accessibility
+- Keyboard navigation (Tab + Enter)
+- Screen reader support (aria-live regions)
+- Reduced motion support
+- Focus indicators
+
+## Tech Stack
+
+| Technology | Purpose |
+|------------|---------|
+| Next.js 16+ | React framework with App Router |
+| Tailwind CSS | Styling with custom theme |
+| Vercel AI SDK | Streaming AI responses |
+| OpenRouter | AI model access (Claude 3.5 Sonnet) |
+| Framer Motion | Animations |
+| DiceBear | Pixel art avatars |
+
+## Project Structure
+
+```
+├── app/
+│   ├── api/chat/route.ts    # AI streaming endpoint
+│   ├── globals.css          # Global styles + reduced motion
+│   ├── layout.tsx           # Root layout with fonts
+│   └── page.tsx             # Main page with state
+├── components/
+│   ├── Lobby.tsx            # Client selection screen
+│   └── ChatRoom.tsx         # Chat interface
+├── lib/
+│   ├── scenarios.ts         # Client definitions
+│   └── utils.ts             # Helper functions
+├── docs/
+│   └── PLAN.md              # Architecture documentation
+├── CHANGELOG.md             # Version history
+└── .env.example             # Environment template
+```
+
+## Deployment
+
+### Vercel (Recommended)
+
+1. Push to GitHub
+2. Import project in [Vercel Dashboard](https://vercel.com/new)
+3. Add environment variable:
+   - `OPENROUTER_API_KEY` = your key
+4. Deploy
+
+### Other Platforms
+
+Ensure your platform supports:
+- Node.js 18+
+- Serverless functions with 30s timeout
+- Environment variables
+
+## Configuration
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `OPENROUTER_API_KEY` | Yes | API key for AI responses |
+
+### Customization
+
+- **Scenarios**: Edit `lib/scenarios.ts` to add/modify clients
+- **Turn Limit**: Change `MAX_TURNS` in `components/ChatRoom.tsx`
+- **Thinking Delay**: Adjust timeout in `app/api/chat/route.ts`
+- **Theme Colors**: Modify `tailwind.config.ts`
+
+## Documentation
+
+- [CHANGELOG.md](CHANGELOG.md) - Version history
+- [docs/PLAN.md](docs/PLAN.md) - Architecture decisions
+
+## Development
+
+```bash
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Run production build locally
+npm start
+
+# Lint code
+npm run lint
+```
+
+## License
+
+MIT
