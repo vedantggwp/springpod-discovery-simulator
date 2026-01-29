@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { getSupabase } from "./supabase";
 import type { Scenario as DBScenario, RequiredDetail, ScenarioHint } from "./types/database";
 
 // Re-export types for backward compatibility
@@ -36,6 +36,7 @@ export type ScenarioId = "kindrell" | "panther" | "idm";
  * Fetch all scenarios from Supabase
  */
 export async function fetchAllScenarios(): Promise<ScenarioV2[]> {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("scenarios")
     .select("*")
@@ -53,6 +54,7 @@ export async function fetchAllScenarios(): Promise<ScenarioV2[]> {
  * Fetch a single scenario by ID from Supabase
  */
 export async function fetchScenario(id: string): Promise<ScenarioV2 | null> {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("scenarios")
     .select("*")
