@@ -54,3 +54,36 @@
 .prose li::marker {
   color: #22c55e;
 }
+
+/* LED Banner Styles */
+.led-text {
+  font-family: var(--font-heading), monospace;
+  font-size: 0.75rem;
+  color: #22c55e;
+  text-shadow: 
+    0 0 5px #22c55e,
+    0 0 10px #22c55e,
+    0 0 20px #22c55e,
+    0 0 40px #166534;
+  letter-spacing: 0.2em;
+}
+
+/* Marquee animation for LED banner */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 15s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}

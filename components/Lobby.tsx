@@ -4,6 +4,7 @@ import { memo } from "react";
 import { motion } from "framer-motion";
 import { getAllScenarios, getAvatarUrl, type ScenarioId, type Scenario } from "@/lib/scenarios";
 import { cn } from "@/lib/utils";
+import { LedBanner } from "./LedBanner";
 
 interface LobbyProps {
   onSelect: (scenarioId: ScenarioId) => void;
@@ -79,6 +80,11 @@ export function Lobby({ onSelect }: LobbyProps) {
 
   return (
     <div className="min-h-screen bg-retro-bg flex flex-col items-center justify-center p-4 sm:p-8">
+      {/* Beta Banner */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <LedBanner text="★ BETA VERSION ★ BETA VERSION ★" />
+      </div>
+
       {/* Title */}
       <motion.h1
         initial={{ opacity: 0, y: -20 }}
@@ -105,6 +111,8 @@ export function Lobby({ onSelect }: LobbyProps) {
           <ScenarioCard
             key={scenario.id}
             scenario={scenario}
+            // Note: Type cast needed because getAllScenarios returns Scenario[] 
+            // where id is string, but onSelect expects ScenarioId
             onSelect={() => onSelect(scenario.id as ScenarioId)}
             index={index}
           />

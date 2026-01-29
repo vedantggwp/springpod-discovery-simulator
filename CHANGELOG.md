@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-01-29
+
+### Added
+- **Consultant Hints System** - Multi-trigger approach to help consultants
+  - Keyword-triggered hints based on AI responses
+  - Time-based hints (30 seconds of inactivity)
+  - Manual "Show me a hint" button
+  - Categorized hints (discovery, technical, relationship)
+  - Dismissible hint cards with usage tracking
+- **Required Details Tracker** - Progress tracking for information gathering
+  - Predefined checklist per scenario (4-5 required details each)
+  - Keyword-based detection of obtained information
+  - Circular progress indicator with percentage
+  - Expandable checklist with checkmarks
+  - Celebration message on completion
+- **Retro LED Banner** - Animated "BETA VERSION" signboard
+  - LED dot-matrix background pattern
+  - Scrolling marquee animation
+  - Glowing text effect
+  - Respects prefers-reduced-motion
+- **Error Boundary** - React error handling
+  - Catches and displays errors gracefully
+  - "Try Again" and "Reload Page" options
+  - Prevents white screen crashes
+- **Web Layout Fix** - Chat now constrained to max-width on desktop
+  - `max-w-2xl` prevents stretching on wide screens
+  - Centered layout with subtle borders
+
+### Changed
+- **API Validation** - Enhanced security
+  - Runtime API key validation with 503 response
+  - Message structure validation (role, content)
+  - Message length limit (2000 chars server-side, 500 client-side)
+- **Performance** - Memoized avatar URLs
+- **Timer Fix** - Time-based hints no longer create duplicate timers
+
+### Technical
+- New components: `LedBanner`, `HintPanel`, `DetailsTracker`, `ErrorBoundary`
+- New utility: `lib/detailsTracker.ts` for completion tracking
+- Extended `Scenario` interface with `requiredDetails` and `hints` arrays
+
+---
+
 ## [1.0.0] - 2026-01-29
 
 ### Added
@@ -53,8 +96,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned
-- Conversation history export
-- Progress scoring/rubric system
+### v1.2.0 - Security & Testing (Planned)
+- Rate limiting with Upstash Redis
+- Unit tests for detailsTracker.ts (Vitest)
+- ESLint v9 configuration migration
+
+### v1.3.0 - Performance & UX (Planned)
+- Next.js Image optimization for avatars
+- Loading skeleton components
+- Session persistence with localStorage
+
+### Future
+- User authentication (NextAuth.js)
+- Conversation history export (PDF/Markdown)
+- Performance analytics dashboard
+- AI-based hint suggestions
 - Additional client scenarios
-- Database persistence (optional)
+- Database persistence

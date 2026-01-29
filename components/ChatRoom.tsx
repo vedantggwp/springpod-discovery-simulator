@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useChat } from "ai/react";
 import { motion, useReducedMotion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { getScenario, getAvatarUrl, type ScenarioId } from "@/lib/scenarios";
+import { getCompletionStatus } from "@/lib/detailsTracker";
 import { cn } from "@/lib/utils";
+import { DetailsTracker } from "./DetailsTracker";
+import { HintPanel } from "./HintPanel";
 
 interface ChatRoomProps {
   scenarioId: ScenarioId;
@@ -18,6 +21,13 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
   const scenario = getScenario(scenarioId);
   const prefersReducedMotion = useReducedMotion();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [lastUserMessageTime, setLastUserMessageTime] = useState<number | null>(null);
+
+  // Memoize avatar URL to avoid recalculating on every render
+  const avatarUrl = useMemo(
+    () => getAvatarUrl(scenario.avatarSeed),
+    [scenario.avatarSeed]
+  );
 
   const {
     messages,
@@ -42,6 +52,23 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
   const userMessageCount = messages.filter((m) => m.role === "user").length;
   const isSessionEnded = userMessageCount >= MAX_TURNS;
 
+  // Track completion status for required details
+  const completionStatus = useMemo(
+    () => getCompletionStatus(scenarioId, messages),
+    [scenarioId, messages]
+  );
+
+  // Track last user message time for time-based hints
+  // Only update when user message count changes (not on every message)
+  const prevUserMessageCountRef = useRef(0);
+  useEffect(() => {
+    const currentUserCount = messages.filter((m) => m.role === "user").length;
+    if (currentUserCount > prevUserMessageCountRef.current) {
+      setLastUserMessageTime(Date.now());
+      prevUserMessageCountRef.current = currentUserCount;
+    }
+  }, [messages]);
+
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -50,7 +77,7 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
   }, [messages, prefersReducedMotion]);
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-terminal-dark">
+    <div className="h-[100dvh] w-full max-w-2xl mx-auto flex flex-col bg-terminal-dark border-x border-green-900/30">
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-green-900 bg-slate-900/50">
         <button
@@ -68,7 +95,7 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
 
         <div className="flex items-center gap-3">
           <img
-            src={getAvatarUrl(scenario.avatarSeed)}
+            src={avatarUrl}
             alt={scenario.name}
             width={48}
             height={48}
@@ -84,13 +111,24 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
         </div>
       </header>
 
+      {/* Tracking Panels */}
+      <div className="flex gap-2 px-4 py-2 bg-slate-900/30 border-b border-green-900/30">
+        <DetailsTracker status={completionStatus} className="flex-1" />
+        <HintPanel
+          scenarioId={scenarioId}
+          messages={messages}
+          lastUserMessageTime={lastUserMessageTime}
+          className="flex-1"
+        />
+      </div>
+
       {/* Chat Area */}
       <div
         className="flex-1 overflow-y-auto p-4 space-y-4"
         aria-live="polite"
         aria-label="Chat messages"
       >
-        {messages.map((message, index) => {
+        {messages.map((message) => {
           const isAssistant = message.role === "assistant";
           const animationProps = prefersReducedMotion
             ? {}
@@ -112,7 +150,7 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
               {isAssistant ? (
                 <>
                   <img
-                    src={getAvatarUrl(scenario.avatarSeed)}
+                    src={avatarUrl}
                     alt=""
                     width={32}
                     height={32}
@@ -148,7 +186,7 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
             className="flex items-center gap-3"
           >
             <img
-              src={getAvatarUrl(scenario.avatarSeed)}
+              src={avatarUrl}
               alt=""
               width={32}
               height={32}
@@ -218,6 +256,7 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
             onChange={handleInputChange}
             placeholder="Ask a question…"
             disabled={isLoading}
+            maxLength={500}
             aria-label="Type your interview question"
             className={cn(
               "flex-1 bg-transparent border-none outline-none",

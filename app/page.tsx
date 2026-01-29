@@ -3,19 +3,22 @@
 import { useState } from "react";
 import { Lobby } from "@/components/Lobby";
 import { ChatRoom } from "@/components/ChatRoom";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import type { ScenarioId } from "@/lib/scenarios";
 
 export default function Home() {
   const [selectedScenario, setSelectedScenario] = useState<ScenarioId | null>(null);
 
-  if (selectedScenario) {
-    return (
-      <ChatRoom
-        scenarioId={selectedScenario}
-        onBack={() => setSelectedScenario(null)}
-      />
-    );
-  }
-
-  return <Lobby onSelect={setSelectedScenario} />;
+  return (
+    <ErrorBoundary>
+      {selectedScenario ? (
+        <ChatRoom
+          scenarioId={selectedScenario}
+          onBack={() => setSelectedScenario(null)}
+        />
+      ) : (
+        <Lobby onSelect={setSelectedScenario} />
+      )}
+    </ErrorBoundary>
+  );
 }
