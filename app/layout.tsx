@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
-import { Press_Start_2P, VT323 } from "next/font/google";
+import { Inter, Press_Start_2P, VT323 } from "next/font/google";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
 
 const pressStart2P = Press_Start_2P({
   weight: "400",
@@ -27,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${pressStart2P.variable} ${vt323.variable} antialiased bg-retro-bg text-white`}
+        className={`${inter.variable} ${pressStart2P.variable} ${vt323.variable} antialiased bg-retro-bg text-white`}
       >
         {children}
       </body>

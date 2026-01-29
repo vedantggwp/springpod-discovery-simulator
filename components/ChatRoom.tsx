@@ -9,15 +9,26 @@ import { cn } from "@/lib/utils";
 
 interface ChatRoomProps {
   scenarioId: ScenarioId;
+  model: string;
   onBack: () => void;
 }
 
 const MAX_TURNS = 15;
 
-export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
+// Custom markdown component for italics (actions) - retro style
+const markdownComponents = {
+  em: ({ children }: { children?: React.ReactNode }) => (
+    <span className="block text-sm text-green-700 border-l-2 border-green-500 pl-2 my-2 not-italic">
+      *{children}*
+    </span>
+  ),
+};
+
+export function ChatRoom({ scenarioId, model, onBack }: ChatRoomProps) {
   const scenario = getScenario(scenarioId);
   const prefersReducedMotion = useReducedMotion();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const {
     messages,
@@ -26,9 +37,10 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
     handleSubmit,
     isLoading,
     error,
+    setInput,
   } = useChat({
     api: "/api/chat",
-    body: { scenarioId },
+    body: { scenarioId, model },
     initialMessages: [
       {
         id: "opening",
@@ -37,6 +49,12 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
       },
     ],
   });
+
+  // Handle hint click
+  const handleHintClick = (hint: string) => {
+    setInput(hint);
+    inputRef.current?.focus();
+  };
 
   // Calculate turns and session end
   const userMessageCount = messages.filter((m) => m.role === "user").length;
@@ -126,7 +144,9 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
                       "text-terminal-green text-lg leading-relaxed"
                     )}
                   >
-                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                    <ReactMarkdown components={markdownComponents}>
+                      {message.content}
+                    </ReactMarkdown>
                   </div>
                 </>
               ) : (
@@ -202,45 +222,67 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
           </button>
         </div>
       ) : (
-        <form
-          onSubmit={handleSubmit}
-          className="flex items-center gap-2 px-4 py-3 border-t border-green-900 bg-slate-900/50"
-        >
-          <span
-            className="font-body text-terminal-green text-2xl"
-            aria-hidden="true"
+        <div className="border-t border-green-900 bg-slate-900/50">
+          {/* Hint Chips - 8-bit style */}
+          <div className="flex gap-2 overflow-x-auto px-4 py-2">
+            {scenario.hints.map((hint, i) => (
+              <button
+                key={i}
+                onClick={() => handleHintClick(hint)}
+                className={cn(
+                  "shrink-0 font-body text-sm text-terminal-green",
+                  "border border-green-600 px-3 py-1",
+                  "hover:bg-green-900/50 transition-colors",
+                  "focus-visible:ring-2 focus-visible:ring-green-400"
+                )}
+              >
+                {hint}
+              </button>
+            ))}
+          </div>
+
+          {/* Input Form */}
+          <form
+            onSubmit={handleSubmit}
+            className="flex items-center gap-2 px-4 py-3"
           >
-            &gt;
-          </span>
-          <input
-            type="text"
-            value={input}
-            onChange={handleInputChange}
-            placeholder="Ask a question…"
-            disabled={isLoading}
-            aria-label="Type your interview question"
-            className={cn(
-              "flex-1 bg-transparent border-none outline-none",
-              "font-body text-lg text-white placeholder:text-gray-600",
-              "focus-visible:ring-0",
-              "disabled:opacity-50 disabled:cursor-not-allowed"
-            )}
-          />
-          <button
-            type="submit"
-            disabled={isLoading || !input.trim()}
-            aria-label="Send message"
-            className={cn(
-              "font-heading text-xs text-terminal-green",
-              "px-3 py-1 border border-terminal-green",
-              "hover:bg-terminal-green hover:text-black transition-colors",
-              "disabled:opacity-50 disabled:cursor-not-allowed",
-              "focus-visible:ring-2 focus-visible:ring-green-400"
-            )}
-          >
-            SEND
-          </button>
-        </form>
+            <span
+              className="font-body text-terminal-green text-2xl"
+              aria-hidden="true"
+            >
+              &gt;
+            </span>
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={handleInputChange}
+              placeholder="Ask a question…"
+              disabled={isLoading}
+              aria-label="Type your interview question"
+              className={cn(
+                "flex-1 bg-transparent border-none outline-none",
+                "font-body text-lg text-white placeholder:text-gray-600",
+                "focus-visible:ring-0",
+                "disabled:opacity-50 disabled:cursor-not-allowed"
+              )}
+            />
+            <button
+              type="submit"
+              disabled={isLoading || !input.trim()}
+              aria-label="Send message"
+              className={cn(
+                "font-heading text-xs text-terminal-green",
+                "px-3 py-1 border border-terminal-green",
+                "hover:bg-terminal-green hover:text-black transition-colors",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+                "focus-visible:ring-2 focus-visible:ring-green-400"
+              )}
+            >
+              SEND
+            </button>
+          </form>
+        </div>
       )}
 
       {/* Turn counter */}

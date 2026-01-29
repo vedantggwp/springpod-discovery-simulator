@@ -12,7 +12,7 @@ const openrouter = createOpenAI({
 
 export async function POST(req: Request) {
   try {
-    const { messages, scenarioId } = await req.json();
+    const { messages, scenarioId, model } = await req.json();
 
     // Validate scenarioId exists
     if (!scenarioId || !scenarios[scenarioId as ScenarioId]) {
@@ -29,8 +29,14 @@ export async function POST(req: Request) {
     // Artificial "thinking" delay for realism (800ms)
     await new Promise((resolve) => setTimeout(resolve, 800));
 
+    // Model selection: quality = Claude, free = Gemma
+    const selectedModel =
+      model === "quality"
+        ? openrouter("anthropic/claude-3.5-sonnet")
+        : openrouter("google/gemma-2-9b-it:free");
+
     const result = await streamText({
-      model: openrouter("anthropic/claude-3.5-sonnet"),
+      model: selectedModel,
       system: scenario.systemPrompt,
       messages,
     });

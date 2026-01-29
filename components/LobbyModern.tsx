@@ -2,10 +2,10 @@
 
 import { memo } from "react";
 import { motion } from "framer-motion";
-import { getAllScenarios, getAvatarUrl, type ScenarioId, type Scenario } from "@/lib/scenarios";
+import { getAllScenarios, type ScenarioId, type Scenario } from "@/lib/scenarios";
 import { cn } from "@/lib/utils";
 
-interface LobbyProps {
+interface LobbyModernProps {
   onSelect: (scenarioId: ScenarioId) => void;
 }
 
@@ -28,69 +28,63 @@ const ScenarioCard = memo(function ScenarioCard({
       onClick={onSelect}
       aria-label={`Interview ${scenario.name}, ${scenario.role}`}
       className={cn(
-        "relative p-6 rounded-none border-4 border-green-500",
-        "bg-slate-900/80 backdrop-blur",
+        "relative p-8 rounded-2xl border border-gray-200",
+        "bg-white shadow-sm",
         "transition-all duration-200",
-        "hover:scale-105 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)]",
-        "focus-visible:ring-2 focus-visible:ring-green-400",
-        "focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950",
+        "hover:shadow-md hover:-translate-y-1",
+        "focus-visible:ring-2 focus-visible:ring-blue-500",
+        "focus-visible:ring-offset-2",
         "group cursor-pointer"
       )}
     >
-      {/* Avatar */}
-      <div className="flex justify-center mb-4">
+      {/* Photo */}
+      <div className="flex justify-center mb-6">
         <img
-          src={getAvatarUrl(scenario.avatarSeed)}
+          src={scenario.photoUrl}
           alt={scenario.name}
-          width={96}
-          height={96}
-          className="pixelated"
-          style={{ imageRendering: "pixelated" }}
+          width={120}
+          height={120}
+          className="rounded-full object-cover"
         />
       </div>
 
       {/* Name */}
-      <h2 className="font-heading text-terminal-green text-xs sm:text-sm text-center mb-2 leading-relaxed">
+      <h2 className="font-[family-name:var(--font-inter)] font-semibold text-slate-900 text-lg text-center mb-1">
         {scenario.name}
       </h2>
 
       {/* Role */}
-      <p className="font-body text-gray-300 text-lg text-center mb-1">
-        {scenario.role}
-      </p>
-
-      {/* Company */}
-      <p className="font-body text-gray-500 text-sm text-center">
-        {scenario.company}
+      <p className="font-[family-name:var(--font-inter)] text-slate-600 text-sm text-center mb-3">
+        {scenario.role} at {scenario.company}
       </p>
 
       {/* Description */}
-      <p className="font-body text-gray-500 text-sm text-center mt-2 italic">
+      <p className="font-[family-name:var(--font-inter)] text-gray-500 text-sm text-center italic">
         &ldquo;{scenario.description}&rdquo;
       </p>
 
       {/* Hover indicator */}
-      <div className="absolute bottom-2 left-0 right-0 text-center opacity-0 group-hover:opacity-100 transition-opacity">
-        <span className="font-body text-terminal-green text-sm animate-blink">
-          ▶ START
+      <div className="absolute bottom-4 left-0 right-0 text-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <span className="font-[family-name:var(--font-inter)] text-blue-600 text-sm font-medium">
+          Start Interview →
         </span>
       </div>
     </motion.button>
   );
 });
 
-export function Lobby({ onSelect }: LobbyProps) {
+export function LobbyModern({ onSelect }: LobbyModernProps) {
   const scenarios = getAllScenarios();
 
   return (
-    <div className="min-h-screen bg-retro-bg flex flex-col items-center justify-center p-4 sm:p-8">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 sm:p-8">
       {/* Title */}
       <motion.h1
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="font-heading text-terminal-green text-sm sm:text-xl text-center mb-4 leading-relaxed"
+        className="font-[family-name:var(--font-inter)] text-slate-900 text-2xl sm:text-3xl font-bold text-center mb-4"
       >
-        SELECT YOUR CLIENT
+        Select Your Client
       </motion.h1>
 
       {/* Subtitle */}
@@ -98,7 +92,7 @@ export function Lobby({ onSelect }: LobbyProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="font-body text-gray-400 text-xl text-center mb-12 max-w-md"
+        className="font-[family-name:var(--font-inter)] text-slate-600 text-base text-center mb-12 max-w-lg"
       >
         Interview a client to discover their business requirements. Ask good
         questions to uncover the real problem.
@@ -121,9 +115,9 @@ export function Lobby({ onSelect }: LobbyProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="font-body text-gray-600 text-sm text-center mt-12"
+        className="font-[family-name:var(--font-inter)] text-gray-400 text-sm text-center mt-12"
       >
-        Use ↹ Tab to navigate • Press Enter to select
+        Use Tab to navigate • Press Enter to select
       </motion.p>
     </div>
   );
