@@ -14,71 +14,43 @@
   }
 }
 
-/* Theme-aware focus rings */
-.theme-retro :focus-visible {
+/* Base focus-visible ring for all interactive elements */
+:focus-visible {
   outline: 2px solid #22c55e;
   outline-offset: 2px;
 }
 
-.theme-modern :focus-visible {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
-}
-
 /* Custom scrollbar for retro theme */
-.theme-retro ::-webkit-scrollbar {
+::-webkit-scrollbar {
   width: 8px;
 }
 
-.theme-retro ::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: #0a0a0a;
 }
 
-.theme-retro ::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
   background: #22c55e;
   border-radius: 0;
 }
 
-.theme-retro ::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb:hover {
   background: #16a34a;
 }
 
-/* Modern theme scrollbar */
-.theme-modern ::-webkit-scrollbar {
-  width: 8px;
-}
-
-.theme-modern ::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-
-.theme-modern ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-
-.theme-modern ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
 /* Typography overrides for retro font */
-.theme-retro .prose {
+.prose {
   font-family: var(--font-body), monospace;
 }
 
-.theme-retro .prose strong {
+.prose strong {
   color: #4ade80;
 }
 
-.theme-retro .prose ul {
+.prose ul {
   list-style-type: "▶ ";
 }
 
-.theme-retro .prose li::marker {
+.prose li::marker {
   color: #22c55e;
-}
-
-/* Modern theme prose */
-.theme-modern .prose {
-  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }

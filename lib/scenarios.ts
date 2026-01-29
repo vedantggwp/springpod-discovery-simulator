@@ -4,9 +4,6 @@ export interface Scenario {
   role: string;
   company: string;
   avatarSeed: string;
-  photoUrl: string;
-  description: string;
-  hints: string[];
   openingLine: string;
   systemPrompt: string;
 }
@@ -17,19 +14,16 @@ export const scenarios: Record<ScenarioId, Scenario> = {
   kindrell: {
     id: "kindrell",
     name: "Gareth Lawson",
-    role: "Head of Delivery",
-    company: "Kindrell",
+    role: "Associate Director",
+    company: "Kindrell (Tier 2 UK Bank)",
     avatarSeed: "gareth",
-    photoUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=256&h=256&fit=crop",
-    description: "Onboarding delays are costing us customers. We need a fix.",
-    hints: [
-      "Are there legacy systems involved?",
-      "What manual checks block the process?",
-      "How does the app talk to the backend?",
-    ],
     openingLine:
       "Hi. I'm Gareth. Our bank's onboarding is a mess. It's too slow.",
-    systemPrompt: `You are Gareth Lawson at Kindrell (Tier 2 Bank). Problem: Customer onboarding is slow due to fragmented legacy systems requiring an API wrapper. Tone: Professional, stressed.
+    systemPrompt: `You are Gareth Lawson, Associate Director at Kindrell. You are helping a Tier 2 UK Bank.
+Problem: Customer onboarding is slow/manual.
+Hidden Technical Root Cause: Fragmented legacy systems are not talking to each other.
+Goal: Student must realize they need an API wrapper/middleware solution.
+Tone: Professional but frustrated.
 
 Important guidelines:
 - Stay in character as Gareth throughout the conversation
@@ -41,19 +35,16 @@ Important guidelines:
   panther: {
     id: "panther",
     name: "Marco Santos",
-    role: "Lead Design Engineer",
+    role: "Lead Engineer",
     company: "Panther Motors",
     avatarSeed: "marco",
-    photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=256&h=256&fit=crop",
-    description: "We need to hide exterior connection points on our luxury SUVs.",
-    hints: [
-      "Which vehicle areas need covers?",
-      "How do competitors solve this?",
-      "Should covers be manual or automatic?",
-    ],
     openingLine:
       "Hello. We need to hide the exterior connection points on our vehicles. Thoughts?",
-    systemPrompt: `You are Marco Santos at Panther Motors. Challenge: Design covers for roof rack/ladder points. Constraints: Robust but luxurious.
+    systemPrompt: `You are Marco Santos, Lead Engineer at Panther Motors (luxury vehicle manufacturer).
+Challenge: Design covers for exterior connection points (roof racks, ladders) for our flagship SUV models.
+Constraints: Must be robust, simple to use, but blend with luxury aesthetics.
+Goal: Student must ask about specific vehicle areas (roof rails, rear quarter) and benchmark competitors.
+Tone: Technical and detail-oriented.
 
 Important guidelines:
 - Stay in character as Marco throughout the conversation
@@ -65,19 +56,16 @@ Important guidelines:
   idm: {
     id: "idm",
     name: "Emma Richardson",
-    role: "Community Director",
-    company: "IDM",
+    role: "Asst. Chief Executive",
+    company: "Innovation District Manchester",
     avatarSeed: "emma",
-    photoUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=256&h=256&fit=crop",
-    description: "Connecting the district's growth with local communities.",
-    hints: [
-      "What initiatives have failed?",
-      "Who are the key local stakeholders?",
-      "Is there a budget?",
-    ],
     openingLine:
       "Hi. Innovation District Manchester is growing, but our local neighbors aren't feeling the benefits.",
-    systemPrompt: `You are Emma Richardson at IDM. Vision: 2040 Inclusive Growth. Goal: Student must propose a community event connecting locals to jobs.
+    systemPrompt: `You are Emma Richardson, Asst. Chief Executive at Innovation District Manchester.
+Context: IDM's 2040 Vision for the region.
+Challenge: Need a project to engage local communities (social impact).
+Goal: Student must propose a specific event or project connecting locals to innovation jobs/health.
+Tone: Inspiring, community-focused.
 
 Important guidelines:
 - Stay in character as Emma throughout the conversation
