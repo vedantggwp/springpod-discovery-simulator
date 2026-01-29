@@ -4,31 +4,25 @@ import { useEffect, useRef } from "react";
 import { useChat } from "ai/react";
 import { motion, useReducedMotion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
-import { getScenario, getAvatarUrl, type ScenarioId } from "@/lib/scenarios";
+import Image from "next/image";
+import { getScenario, type ScenarioId } from "@/lib/scenarios";
 import { cn } from "@/lib/utils";
+import { MAX_TURNS } from "@/lib/constants";
+import { themes, type Theme } from "@/lib/theme";
+import { getMarkdownComponents } from "@/components/MarkdownComponents";
+import type { ChatRoomProps } from "@/lib/types";
 
-interface ChatRoomProps {
-  scenarioId: ScenarioId;
-  model: string;
-  onBack: () => void;
+interface Props extends ChatRoomProps {
+  theme: Theme;
 }
 
-const MAX_TURNS = 15;
-
-// Custom markdown component for italics (actions) - retro style
-const markdownComponents = {
-  em: ({ children }: { children?: React.ReactNode }) => (
-    <span className="block text-sm text-green-700 border-l-2 border-green-500 pl-2 my-2 not-italic">
-      *{children}*
-    </span>
-  ),
-};
-
-export function ChatRoom({ scenarioId, model, onBack }: ChatRoomProps) {
+export function ChatRoom({ scenarioId, model, onBack, theme }: Props) {
   const scenario = getScenario(scenarioId);
   const prefersReducedMotion = useReducedMotion();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const themeConfig = themes[theme];
+  const isRetro = theme === "retro";
 
   const {
     messages,
@@ -38,6 +32,7 @@ export function ChatRoom({ scenarioId, model, onBack }: ChatRoomProps) {
     isLoading,
     error,
     setInput,
+    setMessages,
   } = useChat({
     api: "/api/chat",
     body: { scenarioId, model },
@@ -67,48 +62,93 @@ export function ChatRoom({ scenarioId, model, onBack }: ChatRoomProps) {
     });
   }, [messages, prefersReducedMotion]);
 
-  return (
-    <div className="h-[100dvh] flex flex-col bg-terminal-dark">
-      {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-green-900 bg-slate-900/50">
-        <button
-          onClick={onBack}
-          aria-label="Exit interview and return to client selection"
-          className={cn(
-            "font-heading text-terminal-green text-xs",
-            "hover:text-green-300 transition-colors",
-            "focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900",
-            "px-2 py-1"
-          )}
-        >
-          ← EXIT
-        </button>
+  const markdownComponents = getMarkdownComponents(theme);
 
-        <div className="flex items-center gap-3">
-          <img
-            src={getAvatarUrl(scenario.avatarSeed)}
-            alt={scenario.name}
-            width={48}
-            height={48}
-            className="rounded-none"
-            style={{ imageRendering: "pixelated" }}
-          />
-          <div className="text-right">
-            <h1 className="font-heading text-terminal-green text-[10px] sm:text-xs">
-              {scenario.name}
-            </h1>
-            <p className="font-body text-gray-400 text-sm">{scenario.role}</p>
+  const content = (
+    <>
+      {/* Header */}
+      {isRetro ? (
+        <header className="flex items-center justify-between px-4 py-3 border-b border-green-900 bg-slate-900/50">
+          <button
+            onClick={onBack}
+            aria-label="Exit interview and return to client selection"
+            className={cn(
+              themeConfig.heading,
+              "text-xs hover:text-green-300 transition-colors",
+              themeConfig.focusRing,
+              "focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900",
+              "px-2 py-1"
+            )}
+          >
+            ← EXIT
+          </button>
+
+          <div className="flex items-center gap-3">
+            <Image
+              src={themeConfig.getAvatar(scenario)}
+              alt={scenario.name}
+              width={48}
+              height={48}
+              className={themeConfig.avatar}
+              style={themeConfig.avatarStyle}
+              unoptimized={isRetro}
+            />
+            <div className="text-right">
+              <h1 className={cn(themeConfig.heading, "text-[10px] sm:text-xs")}>
+                {scenario.name}
+              </h1>
+              <p className={cn(themeConfig.body, "text-sm")}>{scenario.role}</p>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      ) : (
+        <header className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white/80 backdrop-blur-md">
+          <button
+            onClick={onBack}
+            aria-label="Exit interview and return to client selection"
+            className={cn(
+              "font-inter text-gray-600 text-sm font-medium",
+              "hover:text-gray-900 transition-colors",
+              themeConfig.focusRing,
+              "focus-visible:ring-offset-2",
+              "px-2 py-1 rounded-lg"
+            )}
+          >
+            ← Back
+          </button>
+
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <h1 className={cn(themeConfig.heading, "text-sm")}>
+                {scenario.name}
+              </h1>
+              <p className={cn(themeConfig.body, "text-xs")}>
+                {scenario.company}
+              </p>
+            </div>
+            <Image
+              src={themeConfig.getAvatar(scenario)}
+              alt={scenario.name}
+              width={40}
+              height={40}
+              className={themeConfig.avatar}
+              style={themeConfig.avatarStyle}
+              unoptimized={isRetro}
+            />
+          </div>
+        </header>
+      )}
 
       {/* Chat Area */}
       <div
-        className="flex-1 overflow-y-auto p-4 space-y-4"
+        className={cn(
+          "flex-1 overflow-y-auto p-4 space-y-4",
+          isRetro ? "" : "bg-white"
+        )}
         aria-live="polite"
         aria-label="Chat messages"
       >
-        {messages.map((message, index) => {
+        {messages.map((message) => {
           const isAssistant = message.role === "assistant";
           const animationProps = prefersReducedMotion
             ? {}
@@ -129,31 +169,60 @@ export function ChatRoom({ scenarioId, model, onBack }: ChatRoomProps) {
             >
               {isAssistant ? (
                 <>
-                  <img
-                    src={getAvatarUrl(scenario.avatarSeed)}
+                  <Image
+                    src={themeConfig.getAvatar(scenario)}
                     alt=""
                     width={32}
                     height={32}
-                    className="rounded-none shrink-0 self-start mt-1"
-                    style={{ imageRendering: "pixelated" }}
-                    aria-hidden="true"
-                  />
-                  <div
                     className={cn(
-                      "max-w-[80%] prose prose-invert prose-green prose-sm font-body",
-                      "text-terminal-green text-lg leading-relaxed"
+                      themeConfig.avatar,
+                      "shrink-0 self-start mt-1"
                     )}
-                  >
-                    <ReactMarkdown components={markdownComponents}>
-                      {message.content}
-                    </ReactMarkdown>
-                  </div>
+                    style={themeConfig.avatarStyle}
+                    aria-hidden="true"
+                    unoptimized={isRetro}
+                  />
+                  {isRetro ? (
+                    <div
+                      className={cn(
+                        "max-w-[80%] prose prose-invert prose-green prose-sm",
+                        themeConfig.body,
+                        themeConfig.aiBubble,
+                        "text-lg leading-relaxed"
+                      )}
+                    >
+                      <ReactMarkdown components={markdownComponents}>
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <div
+                      className={cn(
+                        "max-w-[80%] px-4 py-3 rounded-2xl rounded-tl-sm",
+                        themeConfig.aiBubble,
+                        "font-inter text-sm leading-relaxed",
+                        "prose prose-slate prose-sm max-w-none"
+                      )}
+                    >
+                      <ReactMarkdown components={markdownComponents}>
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
+                  )}
                 </>
               ) : (
-                <div className="max-w-[80%] bg-slate-800/50 px-4 py-2 rounded-sm border-l-2 border-cyan-500">
-                  <p className="font-body text-cyan-300 text-lg leading-relaxed">
-                    {message.content}
-                  </p>
+                <div
+                  className={cn(
+                    "max-w-[80%]",
+                    isRetro ? "px-4 py-2" : "px-4 py-3",
+                    themeConfig.userBubble,
+                    themeConfig.messageBubble,
+                    isRetro ? themeConfig.body : "font-inter text-sm",
+                    isRetro ? "text-lg" : "",
+                    "leading-relaxed"
+                  )}
+                >
+                  {message.content}
                 </div>
               )}
             </motion.div>
@@ -161,43 +230,71 @@ export function ChatRoom({ scenarioId, model, onBack }: ChatRoomProps) {
         })}
 
         {/* Typing Indicator */}
-        {isLoading ? (
+        {isLoading && (
           <motion.div
             initial={prefersReducedMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             className="flex items-center gap-3"
           >
-            <img
-              src={getAvatarUrl(scenario.avatarSeed)}
+            <Image
+              src={themeConfig.getAvatar(scenario)}
               alt=""
               width={32}
               height={32}
-              className="rounded-none"
-              style={{ imageRendering: "pixelated" }}
+              className={themeConfig.avatar}
+              style={themeConfig.avatarStyle}
               aria-hidden="true"
+              unoptimized={isRetro}
             />
-            <span className="font-body text-gray-500 text-lg">
+            <span
+              className={cn(
+                isRetro ? themeConfig.body : "font-inter",
+                isRetro ? "text-gray-500 text-lg" : "text-gray-400 text-sm"
+              )}
+            >
               {scenario.name.split(" ")[0]} is typing
-              <span className="animate-blink">…</span>
+              <span className={themeConfig.typingAnimation}>
+                {isRetro ? "…" : "..."}
+              </span>
             </span>
           </motion.div>
-        ) : null}
+        )}
 
         {/* Error Display */}
-        {error ? (
+        {error && (
           <div className="flex items-center justify-center gap-2 py-4">
-            <span className="font-body text-red-400 text-lg">
+            <span
+              className={cn(
+                isRetro ? themeConfig.body : "font-inter",
+                isRetro ? "text-red-400 text-lg" : "text-red-500 text-sm"
+              )}
+            >
               Connection lost. Please try again.
             </span>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                setMessages([
+                  {
+                    id: "opening",
+                    role: "assistant",
+                    content: scenario.openingLine,
+                  },
+                ]);
+                setInput("");
+              }}
               aria-label="Retry connection"
-              className="font-body text-terminal-green underline hover:text-green-300"
+              className={cn(
+                isRetro ? themeConfig.body : "font-inter",
+                themeConfig.accent,
+                isRetro ? "text-lg" : "text-sm",
+                "underline",
+                isRetro ? "hover:text-green-300" : "hover:text-blue-800"
+              )}
             >
               Retry
             </button>
           </div>
-        ) : null}
+        )}
 
         {/* Scroll anchor */}
         <div ref={messagesEndRef} />
@@ -205,35 +302,77 @@ export function ChatRoom({ scenarioId, model, onBack }: ChatRoomProps) {
 
       {/* Input Area or Session Ended */}
       {isSessionEnded ? (
-        <div className="px-4 py-6 border-t border-green-900 bg-slate-900/50 text-center">
-          <p className="font-body text-yellow-400 text-lg mb-4">
-            ⏰ Time&apos;s up! The client has another meeting.
+        <div
+          className={cn(
+            "px-4 py-6 text-center",
+            isRetro
+              ? "border-t border-green-900 bg-slate-900/50"
+              : "border-t border-gray-100 bg-white"
+          )}
+        >
+          <p
+            className={cn(
+              isRetro ? themeConfig.body : "font-inter",
+              isRetro ? "text-yellow-400 text-lg" : "text-amber-600 text-sm",
+              "mb-4"
+            )}
+          >
+            {isRetro ? "⏰ " : ""}Time&apos;s up! The client has another meeting.
           </p>
           <button
             onClick={onBack}
             className={cn(
-              "font-heading text-xs text-terminal-green",
-              "border-2 border-terminal-green px-4 py-2",
-              "hover:bg-terminal-green hover:text-black transition-colors",
-              "focus-visible:ring-2 focus-visible:ring-green-400"
+              isRetro
+                ? cn(
+                    themeConfig.heading,
+                    "text-xs border-2 px-4 py-2",
+                    "hover:bg-terminal-green hover:text-black transition-colors"
+                  )
+                : cn(
+                    "font-inter text-sm font-medium text-white",
+                    "bg-blue-600 px-6 py-2 rounded-full",
+                    "hover:bg-blue-700 transition-colors"
+                  ),
+              themeConfig.focusRing,
+              isRetro ? "" : "focus-visible:ring-offset-2"
             )}
           >
             Interview another client
           </button>
         </div>
       ) : (
-        <div className="border-t border-green-900 bg-slate-900/50">
-          {/* Hint Chips - 8-bit style */}
-          <div className="flex gap-2 overflow-x-auto px-4 py-2">
+        <div
+          className={cn(
+            isRetro
+              ? "border-t border-green-900 bg-slate-900/50"
+              : "border-t border-gray-100 bg-white"
+          )}
+        >
+          {/* Hint Chips */}
+          <div
+            className={cn(
+              "flex gap-2 overflow-x-auto",
+              isRetro ? "px-4 py-2" : "px-4 py-3 scrollbar-hide"
+            )}
+          >
             {scenario.hints.map((hint, i) => (
               <button
                 key={i}
                 onClick={() => handleHintClick(hint)}
                 className={cn(
-                  "shrink-0 font-body text-sm text-terminal-green",
-                  "border border-green-600 px-3 py-1",
-                  "hover:bg-green-900/50 transition-colors",
-                  "focus-visible:ring-2 focus-visible:ring-green-400"
+                  "shrink-0",
+                  isRetro
+                    ? cn(
+                        themeConfig.body,
+                        "text-sm border px-3 py-1",
+                        "hover:bg-green-900/50 transition-colors"
+                      )
+                    : cn(
+                        "font-inter text-sm",
+                        "text-gray-700 bg-gray-100 rounded-full px-3 py-1.5",
+                        "hover:bg-gray-200 transition-colors"
+                      ),
+                  themeConfig.focusRing
                 )}
               >
                 {hint}
@@ -246,53 +385,117 @@ export function ChatRoom({ scenarioId, model, onBack }: ChatRoomProps) {
             onSubmit={handleSubmit}
             className="flex items-center gap-2 px-4 py-3"
           >
-            <span
-              className="font-body text-terminal-green text-2xl"
-              aria-hidden="true"
-            >
-              &gt;
-            </span>
+            {isRetro && (
+              <span
+                className={cn(themeConfig.body, themeConfig.accent, "text-2xl")}
+                aria-hidden="true"
+              >
+                &gt;
+              </span>
+            )}
             <input
               ref={inputRef}
               type="text"
               value={input}
               onChange={handleInputChange}
-              placeholder="Ask a question…"
+              placeholder={isRetro ? "Ask a question…" : "Ask a question..."}
               disabled={isLoading}
               aria-label="Type your interview question"
               className={cn(
-                "flex-1 bg-transparent border-none outline-none",
-                "font-body text-lg text-white placeholder:text-gray-600",
-                "focus-visible:ring-0",
+                "flex-1 border-none outline-none",
+                isRetro
+                  ? cn(
+                      themeConfig.input,
+                      themeConfig.body,
+                      "text-lg text-white placeholder:text-gray-600",
+                      "focus-visible:ring-0"
+                    )
+                  : cn(
+                      themeConfig.input,
+                      "px-4 py-2.5 font-inter text-sm text-slate-900",
+                      "placeholder:text-gray-400",
+                      themeConfig.focusRing
+                    ),
                 "disabled:opacity-50 disabled:cursor-not-allowed"
               )}
             />
-            <button
-              type="submit"
-              disabled={isLoading || !input.trim()}
-              aria-label="Send message"
-              className={cn(
-                "font-heading text-xs text-terminal-green",
-                "px-3 py-1 border border-terminal-green",
-                "hover:bg-terminal-green hover:text-black transition-colors",
-                "disabled:opacity-50 disabled:cursor-not-allowed",
-                "focus-visible:ring-2 focus-visible:ring-green-400"
-              )}
-            >
-              SEND
-            </button>
+            {isRetro ? (
+              <button
+                type="submit"
+                disabled={isLoading || !input.trim()}
+                aria-label="Send message"
+                className={cn(
+                  themeConfig.heading,
+                  "text-xs px-3 py-1",
+                  themeConfig.button,
+                  "hover:bg-terminal-green hover:text-black transition-colors",
+                  "disabled:opacity-50 disabled:cursor-not-allowed",
+                  themeConfig.focusRing
+                )}
+              >
+                SEND
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={isLoading || !input.trim()}
+                aria-label="Send message"
+                className={cn(
+                  "w-10 h-10 rounded-full bg-blue-600 text-white",
+                  "flex items-center justify-center",
+                  "hover:bg-blue-700 transition-colors",
+                  "disabled:opacity-50 disabled:cursor-not-allowed",
+                  themeConfig.focusRing,
+                  "focus-visible:ring-offset-2"
+                )}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                </svg>
+              </button>
+            )}
           </form>
+
+          {/* Turn counter */}
+          {!isRetro && (
+            <div className="text-center pb-3">
+              <span className="font-inter text-gray-400 text-xs">
+                Questions: {userMessageCount}/{MAX_TURNS}
+              </span>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Turn counter */}
-      {!isSessionEnded ? (
+      {/* Turn counter - Retro */}
+      {isRetro && !isSessionEnded && (
         <div className="text-center py-1 bg-slate-900/30">
-          <span className="font-body text-gray-600 text-sm">
+          <span className={cn(themeConfig.body, "text-gray-600 text-sm")}>
             Questions: {userMessageCount}/{MAX_TURNS}
           </span>
         </div>
-      ) : null}
+      )}
+    </>
+  );
+
+  if (isRetro) {
+    return (
+      <div className={cn(themeConfig.chatContainer, themeConfig.scrollbarClass)}>
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn(themeConfig.chatContainer, themeConfig.scrollbarClass)}>
+      <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full bg-white border-x border-gray-100">
+        {content}
+      </div>
     </div>
   );
 }

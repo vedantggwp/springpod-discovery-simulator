@@ -32,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${pressStart2P.variable} ${vt323.variable} antialiased bg-retro-bg text-white`}
+        className={`${inter.variable} ${pressStart2P.variable} ${vt323.variable} antialiased`}
       >
         {children}
       </body>
