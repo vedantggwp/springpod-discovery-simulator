@@ -4,29 +4,29 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { useChat } from "ai/react";
 import { motion, useReducedMotion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
-import { getScenario, getAvatarUrl, type ScenarioId } from "@/lib/scenarios";
+import { getContactPhotoUrl } from "@/lib/scenarios";
 import { getCompletionStatus } from "@/lib/detailsTracker";
 import { cn } from "@/lib/utils";
 import { DetailsTracker } from "./DetailsTracker";
 import { HintPanel } from "./HintPanel";
+import type { ScenarioV2 } from "@/lib/scenarios";
 
 interface ChatRoomProps {
-  scenarioId: ScenarioId;
+  scenario: ScenarioV2;
   onBack: () => void;
 }
 
-const MAX_TURNS = 15;
-
-export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
-  const scenario = getScenario(scenarioId);
+export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
   const prefersReducedMotion = useReducedMotion();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [lastUserMessageTime, setLastUserMessageTime] = useState<number | null>(null);
 
-  // Memoize avatar URL to avoid recalculating on every render
-  const avatarUrl = useMemo(
-    () => getAvatarUrl(scenario.avatarSeed),
-    [scenario.avatarSeed]
+  const MAX_TURNS = scenario.max_turns || 15;
+
+  // Contact photo URL - use DB value or fallback to DiceBear
+  const contactPhotoUrl = useMemo(
+    () => scenario.contact_photo_url || getContactPhotoUrl(scenario.avatarSeed),
+    [scenario.contact_photo_url, scenario.avatarSeed]
   );
 
   const {
@@ -38,12 +38,12 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
     error,
   } = useChat({
     api: "/api/chat",
-    body: { scenarioId },
+    body: { scenarioId: scenario.id },
     initialMessages: [
       {
         id: "opening",
         role: "assistant",
-        content: scenario.openingLine,
+        content: scenario.opening_line,
       },
     ],
   });
@@ -54,12 +54,11 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
 
   // Track completion status for required details
   const completionStatus = useMemo(
-    () => getCompletionStatus(scenarioId, messages),
-    [scenarioId, messages]
+    () => getCompletionStatus(scenario.id as "kindrell" | "panther" | "idm", messages),
+    [scenario.id, messages]
   );
 
   // Track last user message time for time-based hints
-  // Only update when user message count changes (not on every message)
   const prevUserMessageCountRef = useRef(0);
   useEffect(() => {
     const currentUserCount = messages.filter((m) => m.role === "user").length;
@@ -78,7 +77,7 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
 
   return (
     <div className="h-[100dvh] w-full max-w-2xl mx-auto flex flex-col bg-terminal-dark border-x border-green-900/30">
-      {/* Header */}
+      {/* Header with Contact Photo */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-green-900 bg-slate-900/50">
         <button
           onClick={onBack}
@@ -95,18 +94,19 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
 
         <div className="flex items-center gap-3">
           <img
-            src={avatarUrl}
-            alt={scenario.name}
+            src={contactPhotoUrl}
+            alt={scenario.contact_name}
             width={48}
             height={48}
-            className="rounded-none"
-            style={{ imageRendering: "pixelated" }}
+            className="rounded-none border border-green-900/50 bg-slate-800"
           />
           <div className="text-right">
             <h1 className="font-heading text-terminal-green text-[10px] sm:text-xs">
-              {scenario.name}
+              {scenario.contact_name}
             </h1>
-            <p className="font-body text-gray-400 text-sm">{scenario.role}</p>
+            <p className="font-body text-gray-400 text-sm">
+              {scenario.contact_role} • {scenario.company_name}
+            </p>
           </div>
         </div>
       </header>
@@ -115,7 +115,7 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
       <div className="flex gap-2 px-4 py-2 bg-slate-900/30 border-b border-green-900/30">
         <DetailsTracker status={completionStatus} className="flex-1" />
         <HintPanel
-          scenarioId={scenarioId}
+          scenarioId={scenario.id as "kindrell" | "panther" | "idm"}
           messages={messages}
           lastUserMessageTime={lastUserMessageTime}
           className="flex-1"
@@ -150,12 +150,11 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
               {isAssistant ? (
                 <>
                   <img
-                    src={avatarUrl}
+                    src={contactPhotoUrl}
                     alt=""
                     width={32}
                     height={32}
-                    className="rounded-none shrink-0 self-start mt-1"
-                    style={{ imageRendering: "pixelated" }}
+                    className="rounded-none shrink-0 self-start mt-1 border border-green-900/30 bg-slate-800"
                     aria-hidden="true"
                   />
                   <div
@@ -186,16 +185,15 @@ export function ChatRoom({ scenarioId, onBack }: ChatRoomProps) {
             className="flex items-center gap-3"
           >
             <img
-              src={avatarUrl}
+              src={contactPhotoUrl}
               alt=""
               width={32}
               height={32}
-              className="rounded-none"
-              style={{ imageRendering: "pixelated" }}
+              className="rounded-none border border-green-900/30 bg-slate-800"
               aria-hidden="true"
             />
             <span className="font-body text-gray-500 text-lg">
-              {scenario.name.split(" ")[0]} is typing
+              {scenario.contact_name.split(" ")[0]} is typing
               <span className="animate-blink">…</span>
             </span>
           </motion.div>

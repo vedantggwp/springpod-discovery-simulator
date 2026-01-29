@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-01-29
+
+### Added
+- **Rich Client Briefings** - Pre-meeting context for consultants
+  - New `ClientBrief` component with company background
+  - "Why They Contacted Us" quote section
+  - "What You Should Know" bullet points
+  - Contact card with photo, role, and communication style
+- **Supabase Database** - Persistent data storage
+  - PostgreSQL database for scenarios, sessions, and messages
+  - TypeScript types for full type safety
+  - Server and client Supabase clients
+- **Company Logos on Selection** - Visual distinction in lobby
+  - Company-focused cards (not person-focused)
+  - Industry and difficulty indicators
+  - "View Brief" flow before chat
+- **Person Photos in Chat** - More realistic conversations
+  - DiceBear avataaars for contact photos
+  - Photos in header and message bubbles
+- **Claude 3 Haiku** - Cost-effective AI model
+  - Primary model for roleplay (~10x cheaper)
+  - Automatic fallback to Claude 3.5 Sonnet
+- **Enhanced Scenario Content** - Richer briefing material
+  - Company background, tagline, industry
+  - Contact years at company, reports to, background
+  - Communication style descriptions
+
+### Changed
+- **Lobby redesign** - Now shows companies, not contacts
+- **User flow** - Lobby → Brief → Chat (was Lobby → Chat)
+- **API route** - Fetches scenarios from Supabase instead of hardcoded
+- **Environment variables** - Updated for new Supabase key naming
+  - `SUPABASE_PUBLISHABLE_KEY` (was `anon`)
+  - `SUPABASE_SECRET_KEY` (was `service_role`)
+
+### Technical
+- New files: `lib/supabase.ts`, `lib/types/database.ts`, `lib/ai-config.ts`
+- New component: `components/ClientBrief.tsx`
+- New scripts: `scripts/seed-scenarios.mjs`, `scripts/schema.sql`
+- Added `@supabase/supabase-js` dependency
+- Updated `scenarios.ts` with DB fetch functions
+
+---
+
 ## [1.1.0] - 2026-01-29
 
 ### Added
@@ -96,20 +140,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### v1.2.0 - Security & Testing (Planned)
-- Rate limiting with Upstash Redis
-- Unit tests for detailsTracker.ts (Vitest)
-- ESLint v9 configuration migration
+### v1.3.0 - Goal-Oriented (Planned)
+- Goal selection before meeting
+- Post-meeting debrief summary
+- Unit tests for core components
 
-### v1.3.0 - Performance & UX (Planned)
-- Next.js Image optimization for avatars
-- Loading skeleton components
-- Session persistence with localStorage
+### v1.4.0 - Rich Content (Planned)
+- Client documents and PDFs
+- Email thread context
+- Admin interface for content management
 
-### Future
-- User authentication (NextAuth.js)
-- Conversation history export (PDF/Markdown)
-- Performance analytics dashboard
-- AI-based hint suggestions
-- Additional client scenarios
-- Database persistence
+### v1.5.0 - Production Ready (Planned)
+- User authentication (Supabase Auth)
+- Rate limiting
+- Response caching
+- Analytics dashboard

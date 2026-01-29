@@ -2,18 +2,40 @@
 
 import { memo } from "react";
 import { motion } from "framer-motion";
-import { getAllScenarios, getAvatarUrl, type ScenarioId, type Scenario } from "@/lib/scenarios";
 import { cn } from "@/lib/utils";
 import { LedBanner } from "./LedBanner";
+import type { ScenarioV2 } from "@/lib/scenarios";
 
 interface LobbyProps {
-  onSelect: (scenarioId: ScenarioId) => void;
+  scenarios: ScenarioV2[];
+  onSelect: (scenarioId: string) => void;
+  isLoading?: boolean;
 }
 
 interface ScenarioCardProps {
-  scenario: Scenario;
+  scenario: ScenarioV2;
   onSelect: () => void;
   index: number;
+}
+
+// Difficulty indicator dots
+function DifficultyDots({ difficulty }: { difficulty: "easy" | "medium" | "hard" }) {
+  const levels = { easy: 1, medium: 2, hard: 3 };
+  const level = levels[difficulty];
+  
+  return (
+    <div className="flex gap-1" aria-label={`Difficulty: ${difficulty}`}>
+      {[1, 2, 3].map((dot) => (
+        <div
+          key={dot}
+          className={cn(
+            "w-2 h-2 rounded-full",
+            dot <= level ? "bg-terminal-green" : "bg-gray-700"
+          )}
+        />
+      ))}
+    </div>
+  );
 }
 
 const ScenarioCard = memo(function ScenarioCard({
@@ -22,62 +44,64 @@ const ScenarioCard = memo(function ScenarioCard({
   index,
 }: ScenarioCardProps) {
   return (
-    <motion.button
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      onClick={onSelect}
-      aria-label={`Interview ${scenario.name}, ${scenario.role}`}
       className={cn(
         "relative p-6 rounded-none border-4 border-green-500",
         "bg-slate-900/80 backdrop-blur",
-        "transition-all duration-200",
-        "hover:scale-105 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)]",
-        "focus-visible:ring-2 focus-visible:ring-green-400",
-        "focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950",
-        "group cursor-pointer"
+        "flex flex-col"
       )}
     >
-      {/* Avatar */}
+      {/* Company Logo Placeholder */}
       <div className="flex justify-center mb-4">
-        <img
-          src={getAvatarUrl(scenario.avatarSeed)}
-          alt={scenario.name}
-          width={96}
-          height={96}
-          className="pixelated"
-          style={{ imageRendering: "pixelated" }}
-        />
+        <div className="w-24 h-24 bg-slate-800 border-2 border-green-900/50 flex items-center justify-center">
+          <span className="font-heading text-terminal-green text-2xl">
+            {scenario.company_name.split(" ").map(w => w[0]).join("").slice(0, 3)}
+          </span>
+        </div>
       </div>
 
-      {/* Name */}
+      {/* Company Name */}
       <h2 className="font-heading text-terminal-green text-xs sm:text-sm text-center mb-2 leading-relaxed">
-        {scenario.name}
+        {scenario.company_name}
       </h2>
 
-      {/* Role */}
-      <p className="font-body text-gray-300 text-lg text-center mb-1">
-        {scenario.role}
-      </p>
+      {/* Tagline */}
+      {scenario.company_tagline && (
+        <p className="font-body text-gray-500 text-sm text-center mb-4 line-clamp-2">
+          {scenario.company_tagline}
+        </p>
+      )}
 
-      {/* Company */}
-      <p className="font-body text-gray-500 text-sm text-center">
-        {scenario.company}
-      </p>
-
-      {/* Hover indicator */}
-      <div className="absolute bottom-2 left-0 right-0 text-center opacity-0 group-hover:opacity-100 transition-opacity">
-        <span className="font-body text-terminal-green text-sm animate-blink">
-          ▶ START
+      {/* Industry + Difficulty */}
+      <div className="flex items-center justify-center gap-3 mb-4">
+        <span className="font-body text-gray-400 text-sm">
+          {scenario.company_industry}
         </span>
+        <DifficultyDots difficulty={scenario.difficulty} />
       </div>
-    </motion.button>
+
+      {/* View Brief Button */}
+      <button
+        onClick={onSelect}
+        aria-label={`View brief for ${scenario.company_name}`}
+        className={cn(
+          "mt-auto font-heading text-xs text-terminal-green",
+          "border-2 border-terminal-green px-4 py-2",
+          "hover:bg-terminal-green hover:text-black transition-colors",
+          "focus-visible:ring-2 focus-visible:ring-green-400",
+          "focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+        )}
+      >
+        VIEW BRIEF →
+      </button>
+    </motion.div>
   );
 });
 
-export function Lobby({ onSelect }: LobbyProps) {
-  const scenarios = getAllScenarios();
-
+export function Lobby({ scenarios, onSelect, isLoading }: LobbyProps) {
   return (
     <div className="min-h-screen bg-retro-bg flex flex-col items-center justify-center p-4 sm:p-8">
       {/* Beta Banner */}
@@ -91,7 +115,7 @@ export function Lobby({ onSelect }: LobbyProps) {
         animate={{ opacity: 1, y: 0 }}
         className="font-heading text-terminal-green text-sm sm:text-xl text-center mb-4 leading-relaxed"
       >
-        SELECT YOUR CLIENT
+        SELECT A CLIENT ENGAGEMENT
       </motion.h1>
 
       {/* Subtitle */}
@@ -101,23 +125,40 @@ export function Lobby({ onSelect }: LobbyProps) {
         transition={{ delay: 0.2 }}
         className="font-body text-gray-400 text-xl text-center mb-12 max-w-md"
       >
-        Interview a client to discover their business requirements. Ask good
-        questions to uncover the real problem.
+        Review the client brief, then meet with your contact to discover their real business problem.
       </motion.p>
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="text-center py-12">
+          <span className="font-body text-terminal-green text-lg animate-pulse">
+            Loading client engagements...
+          </span>
+        </div>
+      )}
+
       {/* Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full">
-        {scenarios.map((scenario, index) => (
-          <ScenarioCard
-            key={scenario.id}
-            scenario={scenario}
-            // Note: Type cast needed because getAllScenarios returns Scenario[] 
-            // where id is string, but onSelect expects ScenarioId
-            onSelect={() => onSelect(scenario.id as ScenarioId)}
-            index={index}
-          />
-        ))}
-      </div>
+      {!isLoading && scenarios.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full">
+          {scenarios.map((scenario, index) => (
+            <ScenarioCard
+              key={scenario.id}
+              scenario={scenario}
+              onSelect={() => onSelect(scenario.id)}
+              index={index}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && scenarios.length === 0 && (
+        <div className="text-center py-12">
+          <span className="font-body text-gray-500 text-lg">
+            No client engagements available.
+          </span>
+        </div>
+      )}
 
       {/* Footer hint */}
       <motion.p

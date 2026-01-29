@@ -1,6 +1,7 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { streamText } from "ai";
-import { scenarios, type ScenarioId } from "@/lib/scenarios";
+import { createServerClient } from "@/lib/supabase";
+import { AI_CONFIG } from "@/lib/ai-config";
 
 // CRITICAL: Prevent Vercel serverless timeout (default 10-15s)
 export const maxDuration = 30;
@@ -25,9 +26,9 @@ export async function POST(req: Request) {
 
     const { messages, scenarioId } = await req.json();
 
-    // Validate scenarioId exists
-    if (!scenarioId || !scenarios[scenarioId as ScenarioId]) {
-      return new Response("Invalid scenario", { status: 400 });
+    // Validate scenarioId
+    if (!scenarioId) {
+      return new Response("Scenario ID required", { status: 400 });
     }
 
     // Validate messages array
@@ -45,20 +46,54 @@ export async function POST(req: Request) {
       }
     }
 
-    const scenario = scenarios[scenarioId as ScenarioId];
+    // Fetch scenario from Supabase
+    const supabase = createServerClient();
+    const { data: scenarioData, error } = await supabase
+      .from("scenarios")
+      .select("system_prompt, contact_name")
+      .eq("id", scenarioId)
+      .single<{ system_prompt: string; contact_name: string }>();
 
-    // Artificial "thinking" delay for realism (800ms)
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    if (error || !scenarioData) {
+      console.error("Scenario fetch error:", error);
+      return new Response("Invalid scenario", { status: 400 });
+    }
 
-    const result = await streamText({
-      model: openrouter("anthropic/claude-3.5-sonnet"),
-      system: scenario.systemPrompt,
-      messages,
-    });
+    const systemPrompt = scenarioData.system_prompt;
 
-    return result.toDataStreamResponse();
+    // Artificial "thinking" delay for realism
+    await new Promise((resolve) => setTimeout(resolve, AI_CONFIG.thinkingDelayMs));
+
+    // Try primary model (Claude 3 Haiku)
+    try {
+      const result = await streamText({
+        model: openrouter(AI_CONFIG.primary.model),
+        system: systemPrompt,
+        messages,
+        maxTokens: AI_CONFIG.primary.maxTokens,
+      });
+
+      return result.toDataStreamResponse();
+    } catch (primaryError) {
+      console.warn("Primary model (Haiku) failed, trying fallback:", primaryError);
+
+      // Fallback to Claude 3.5 Sonnet
+      try {
+        const result = await streamText({
+          model: openrouter(AI_CONFIG.fallback.model),
+          system: systemPrompt,
+          messages,
+          maxTokens: AI_CONFIG.fallback.maxTokens,
+        });
+
+        return result.toDataStreamResponse();
+      } catch (fallbackError) {
+        console.error("Fallback model also failed:", fallbackError);
+        throw fallbackError;
+      }
+    }
   } catch (error) {
-    console.error("OpenRouter API error:", error);
+    console.error("Chat API error:", error);
     return new Response("AI service unavailable", { status: 503 });
   }
 }
