@@ -1,5 +1,5 @@
 import type { Message } from "ai";
-import { scenarios, type ScenarioId, type RequiredDetail } from "./scenarios";
+import type { RequiredDetail } from "./scenarios";
 
 export interface DetailStatus {
   detail: RequiredDetail;
@@ -48,14 +48,13 @@ export function checkDetailObtained(
 
 /**
  * Get the full completion status for a scenario
+ * @param requiredDetails - Array of required details to track (passed from scenario data)
+ * @param messages - Conversation messages to scan for keywords
  */
 export function getCompletionStatus(
-  scenarioId: ScenarioId,
+  requiredDetails: RequiredDetail[],
   messages: Message[]
 ): CompletionStatus {
-  const scenario = scenarios[scenarioId];
-  const requiredDetails = scenario.requiredDetails;
-
   const details: DetailStatus[] = requiredDetails.map((detail) => {
     const { obtained, messageIndex } = checkDetailObtained(detail, messages);
     return { detail, obtained, messageIndex };

@@ -52,10 +52,10 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
   const userMessageCount = messages.filter((m) => m.role === "user").length;
   const isSessionEnded = userMessageCount >= MAX_TURNS;
 
-  // Track completion status for required details
+  // Track completion status for required details (pass data directly from DB scenario)
   const completionStatus = useMemo(
-    () => getCompletionStatus(scenario.id as "kindrell" | "panther" | "idm", messages),
-    [scenario.id, messages]
+    () => getCompletionStatus(scenario.required_details || [], messages),
+    [scenario.required_details, messages]
   );
 
   // Track last user message time for time-based hints
@@ -115,7 +115,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
       <div className="flex gap-2 px-4 py-2 bg-slate-900/30 border-b border-green-900/30">
         <DetailsTracker status={completionStatus} className="flex-1" />
         <HintPanel
-          scenarioId={scenario.id as "kindrell" | "panther" | "idm"}
+          hints={scenario.hints || []}
           messages={messages}
           lastUserMessageTime={lastUserMessageTime}
           className="flex-1"

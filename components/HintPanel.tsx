@@ -3,12 +3,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import type { Message } from "ai";
-import type { ScenarioHint, ScenarioId } from "@/lib/scenarios";
-import { scenarios } from "@/lib/scenarios";
+import type { ScenarioHint } from "@/lib/scenarios";
 import { cn } from "@/lib/utils";
 
 interface HintPanelProps {
-  scenarioId: ScenarioId;
+  hints: ScenarioHint[];
   messages: Message[];
   lastUserMessageTime: number | null;
   className?: string;
@@ -21,7 +20,7 @@ interface ActiveHint {
 }
 
 export function HintPanel({
-  scenarioId,
+  hints,
   messages,
   lastUserMessageTime,
   className,
@@ -31,8 +30,7 @@ export function HintPanel({
   const [usedHintIds, setUsedHintIds] = useState<Set<string>>(new Set());
   const prefersReducedMotion = useReducedMotion();
 
-  const scenario = scenarios[scenarioId];
-  const allHints = scenario.hints;
+  const allHints = hints;
 
   // Check for keyword-triggered hints based on AI responses
   const checkKeywordHints = useCallback(() => {

@@ -103,7 +103,7 @@ const ScenarioCard = memo(function ScenarioCard({
 
 export function Lobby({ scenarios, onSelect, isLoading }: LobbyProps) {
   return (
-    <div className="min-h-screen bg-retro-bg flex flex-col items-center justify-center p-4 sm:p-8">
+    <div className="min-h-screen bg-retro-bg flex flex-col items-center justify-center p-4 sm:p-8 pt-14">
       {/* Beta Banner */}
       <div className="fixed top-0 left-0 right-0 z-50">
         <LedBanner text="★ BETA VERSION ★ BETA VERSION ★" />
