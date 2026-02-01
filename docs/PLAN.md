@@ -162,7 +162,7 @@ export interface Scenario {
   systemPrompt: string;
 }
 
-export type ScenarioId = 'kyndryl' | 'jlr' | 'kq';
+export type ScenarioId = 'kindrell' | 'panther' | 'idm';
 ```
 
 Helper function to get avatar URL:

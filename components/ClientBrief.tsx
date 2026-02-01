@@ -58,9 +58,11 @@ export function ClientBrief({ scenario, onStartMeeting, onBack }: ClientBriefPro
               <h1 className="font-heading text-terminal-green text-sm sm:text-base mb-1">
                 {scenario.company_name}
               </h1>
-              <p className="font-body text-gray-400 text-sm">
-                {scenario.company_tagline}
-              </p>
+              {scenario.company_tagline ? (
+                <p className="font-body text-gray-400 text-sm">
+                  {scenario.company_tagline}
+                </p>
+              ) : null}
             </div>
           </div>
           
@@ -73,45 +75,49 @@ export function ClientBrief({ scenario, onStartMeeting, onBack }: ClientBriefPro
               {scenario.difficulty.toUpperCase()}
             </span>
             <span className="px-2 py-1 text-xs font-body border border-gray-600 text-gray-400">
-              {scenario.company_industry}
+              {scenario.company_industry ?? ""}
             </span>
           </div>
         </motion.div>
 
         {/* Why They Contacted Us */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-6"
-        >
-          <h2 className="font-heading text-terminal-green text-xs mb-3 border-b border-green-900/30 pb-2">
-            WHY THEY CONTACTED US
-          </h2>
-          <blockquote className="font-body text-lg text-gray-300 italic border-l-2 border-cyan-500 pl-4">
-            {scenario.company_why_contacted}
-          </blockquote>
-        </motion.section>
+        {scenario.company_why_contacted ? (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mb-6"
+          >
+            <h2 className="font-heading text-terminal-green text-xs mb-3 border-b border-green-900/30 pb-2">
+              WHY THEY CONTACTED US
+            </h2>
+            <blockquote className="font-body text-lg text-gray-300 italic border-l-2 border-cyan-500 pl-4">
+              {scenario.company_why_contacted}
+            </blockquote>
+          </motion.section>
+        ) : null}
 
         {/* What You Should Know */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-6"
-        >
-          <h2 className="font-heading text-terminal-green text-xs mb-3 border-b border-green-900/30 pb-2">
-            WHAT YOU SHOULD KNOW
-          </h2>
-          <ul className="space-y-2">
-            {scenario.company_context.map((item, index) => (
-              <li key={index} className="flex items-start gap-2">
-                <span className="text-terminal-green mt-1">•</span>
-                <span className="font-body text-gray-300 text-lg">{item}</span>
-              </li>
-            ))}
-          </ul>
-        </motion.section>
+        {(scenario.company_context ?? []).length > 0 ? (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mb-6"
+          >
+            <h2 className="font-heading text-terminal-green text-xs mb-3 border-b border-green-900/30 pb-2">
+              WHAT YOU SHOULD KNOW
+            </h2>
+            <ul className="space-y-2">
+              {(scenario.company_context ?? []).map((item, index) => (
+                <li key={index} className="flex items-start gap-2">
+                  <span className="text-terminal-green mt-1">•</span>
+                  <span className="font-body text-gray-300 text-lg">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </motion.section>
+        ) : null}
 
         {/* Company Background */}
         {scenario.company_background && (
@@ -160,8 +166,10 @@ export function ClientBrief({ scenario, onStartMeeting, onBack }: ClientBriefPro
                   {scenario.contact_role}
                 </p>
                 <p className="font-body text-gray-500 text-sm">
-                  {scenario.contact_years_at_company} years at {scenario.company_name}
-                  {scenario.contact_reports_to && ` • Reports to ${scenario.contact_reports_to}`}
+                  {scenario.contact_years_at_company != null
+                    ? `${scenario.contact_years_at_company} years at ${scenario.company_name}`
+                    : scenario.company_name}
+                  {scenario.contact_reports_to ? ` • Reports to ${scenario.contact_reports_to}` : ""}
                 </p>
               </div>
             </div>

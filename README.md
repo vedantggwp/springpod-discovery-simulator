@@ -28,9 +28,12 @@ npm install
 cp .env.example .env.local
 ```
 
-Edit `.env.local` and add your OpenRouter API key:
+Edit `.env.local` and add your API keys (see `.env.example` for all variables):
 ```
 OPENROUTER_API_KEY=your_key_here
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
+SUPABASE_SECRET_KEY=your_secret_key
 ```
 
 ### Running Locally
@@ -54,9 +57,11 @@ Each scenario has hidden requirements that students must discover through effect
 ## Features
 
 ### Core Functionality
-- **AI-Powered Conversations** - Realistic client responses via Claude 3.5 Sonnet
-- **15-Turn Limit** - Simulates real meeting time pressure
+- **Lobby → Brief → Chat** - Select a client engagement, review the brief, then conduct the discovery interview
+- **AI-Powered Conversations** - Realistic client responses (Claude 3 Haiku primary, 3.5 Sonnet fallback)
+- **Turn Limit** - Configurable per scenario; simulates real meeting time pressure
 - **Thinking Delay** - 800ms pause makes responses feel natural
+- **Progress Tracking** - Details tracker and hint panel per scenario
 
 ### User Experience
 - **8-Bit Theme** - Retro pixel art avatars and terminal aesthetic
@@ -77,9 +82,10 @@ Each scenario has hidden requirements that students must discover through effect
 | Next.js 16+ | React framework with App Router |
 | Tailwind CSS | Styling with custom theme |
 | Vercel AI SDK | Streaming AI responses |
-| OpenRouter | AI model access (Claude 3.5 Sonnet) |
+| OpenRouter | AI model access (Claude 3 Haiku / 3.5 Sonnet) |
+| Supabase | Scenario data and persistence |
 | Framer Motion | Animations |
-| DiceBear | Pixel art avatars |
+| DiceBear | Pixel art and avataaars |
 
 ## Project Structure
 
@@ -90,15 +96,24 @@ Each scenario has hidden requirements that students must discover through effect
 │   ├── layout.tsx           # Root layout with fonts
 │   └── page.tsx             # Main page with state
 ├── components/
-│   ├── Lobby.tsx            # Client selection screen
-│   └── ChatRoom.tsx         # Chat interface
+│   ├── Lobby.tsx            # Client engagement selection
+│   ├── ClientBrief.tsx      # Pre-meeting brief
+│   ├── ChatRoom.tsx         # Chat interface
+│   ├── DetailsTracker.tsx   # Progress tracking
+│   ├── HintPanel.tsx        # Consultant hints
+│   ├── LedBanner.tsx        # Beta banner
+│   └── ErrorBoundary.tsx    # Error handling
 ├── lib/
-│   ├── scenarios.ts         # Client definitions
-│   └── utils.ts             # Helper functions
+│   ├── scenarios.ts        # Scenario fetch + definitions
+│   ├── supabase.ts         # Supabase clients
+│   ├── ai-config.ts        # AI model config
+│   ├── detailsTracker.ts   # Completion logic
+│   ├── utils.ts            # Helper functions
+│   └── types/database.ts   # DB types
 ├── docs/
-│   └── PLAN.md              # Architecture documentation
-├── CHANGELOG.md             # Version history
-└── .env.example             # Environment template
+│   └── PLAN.md             # Architecture documentation
+├── CHANGELOG.md            # Version history
+└── .env.example            # Environment template
 ```
 
 ## Deployment
@@ -107,8 +122,7 @@ Each scenario has hidden requirements that students must discover through effect
 
 1. Push to GitHub
 2. Import project in [Vercel Dashboard](https://vercel.com/new)
-3. Add environment variable:
-   - `OPENROUTER_API_KEY` = your key
+3. Add environment variables (see Configuration below)
 4. Deploy
 
 ### Other Platforms
@@ -125,6 +139,9 @@ Ensure your platform supports:
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `OPENROUTER_API_KEY` | Yes | API key for AI responses |
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes | Supabase anon/publishable key |
+| `SUPABASE_SECRET_KEY` | Yes | Supabase service role key (server-side) |
 
 ### Customization
 

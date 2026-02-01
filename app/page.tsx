@@ -48,11 +48,6 @@ export default function Home() {
     setView("chat");
   };
 
-  // Handle back from brief -> go to lobby
-  const handleBackToBrief = () => {
-    setView("brief");
-  };
-
   // Handle back to lobby
   const handleBackToLobby = () => {
     setSelectedScenario(null);

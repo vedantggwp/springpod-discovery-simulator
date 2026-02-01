@@ -33,21 +33,25 @@ export type ScenarioId = "kindrell" | "panther" | "idm";
 // ============================================
 
 /**
- * Fetch all scenarios from Supabase
+ * Fetch all scenarios from Supabase, or hardcoded list when Supabase is not configured
  */
 export async function fetchAllScenarios(): Promise<ScenarioV2[]> {
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from("scenarios")
-    .select("*")
-    .order("id");
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from("scenarios")
+      .select("*")
+      .order("id");
 
-  if (error) {
-    console.error("Error fetching scenarios:", error);
-    throw error;
+    if (error) {
+      console.error("Error fetching scenarios:", error);
+      throw error;
+    }
+
+    return (data || []).map(transformDBScenario);
+  } catch {
+    return getAllScenarios().map(legacyToScenarioV2);
   }
-
-  return (data || []).map(transformDBScenario);
 }
 
 /**
@@ -101,6 +105,42 @@ export function toLegacyScenario(scenario: ScenarioV2): Scenario {
     systemPrompt: scenario.system_prompt,
     requiredDetails: scenario.required_details,
     hints: scenario.hints,
+  };
+}
+
+/**
+ * Convert legacy Scenario to ScenarioV2 (for fallback when Supabase is not configured)
+ */
+function legacyToScenarioV2(scenario: Scenario): ScenarioV2 {
+  const now = new Date().toISOString();
+  return {
+    id: scenario.id,
+    company_name: scenario.company,
+    company_logo_url: null,
+    company_industry: null,
+    company_tagline: null,
+    company_background: null,
+    company_why_contacted: null,
+    company_context: [],
+    contact_name: scenario.name,
+    contact_role: scenario.role,
+    contact_photo_url: null,
+    contact_years_at_company: null,
+    contact_reports_to: null,
+    contact_background: null,
+    contact_communication_style: null,
+    opening_line: scenario.openingLine,
+    system_prompt: scenario.systemPrompt,
+    difficulty: "medium",
+    max_turns: 15,
+    required_details: scenario.requiredDetails,
+    hints: scenario.hints,
+    created_at: now,
+    updated_at: now,
+    avatarSeed: scenario.avatarSeed,
+    name: scenario.name,
+    role: scenario.role,
+    company: scenario.company,
   };
 }
 

@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2026-02-01
+
+### Fixed
+- **ClientBrief null-safety** - Guarded nullable DB fields to avoid runtime errors
+  - `company_context`: use `?? []` and only render section when array has items
+  - `company_why_contacted`: only render blockquote when present
+  - `company_tagline` and `company_industry`: conditional render / empty string fallback
+  - `contact_years_at_company`: show "X years at Company" only when not null
+
+### Changed
+- **README** - Updated flow (Lobby → Brief → Chat), project structure, env vars table, features, and tech stack to match v1.2
+- **docs/PLAN.md** - Corrected `ScenarioId` example from `'kyndryl' | 'jlr' | 'kq'` to `'kindrell' | 'panther' | 'idm'`
+- **API route** - When Supabase is unavailable, use hardcoded scenarios for valid scenario IDs; return 400 for invalid scenario
+- **fetchAllScenarios** - Fallback to hardcoded scenarios when Supabase is not configured (e.g. local dev without DB)
+- **eslint-config-next** - Bumped to `^16.1.6` to align with Next 16
+
+### Removed
+- **Dead code** - Removed unused `handleBackToBrief` from `app/page.tsx`
+
+---
+
 ## [1.2.2] - 2026-01-30
 
 ### Added
