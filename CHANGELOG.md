@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+---
+
+## [1.2.5] - 2026-02-02
+
+### Added
+- **Lobby orientation (Approach D)** – Feature discovery and “what’s new” in one place
+  - **What’s new banner** – Replaced beta marquee with top strip: version, last updated date, one-line summary (from `lib/constants.ts` APP_RELEASE)
+  - **“What you can do” block** – Three bullets: pick client → read brief → discovery chat; use details tracker, hints, View brief anytime
+  - **Beta in footer** – “Springpod Discovery Simulator · Beta” in Lobby footer; keyboard hint retained
+- **Unit tests** – Vitest + React Testing Library
+  - `lib/__tests__/constants.test.ts` – CHAT_LIMITS, APP_RELEASE (5 tests)
+  - `lib/__tests__/utils.test.ts` – safeImageUrl, safeMarkdownLink (16 tests)
+  - `lib/__tests__/detailsTracker.test.ts` – checkDetailObtained, getCompletionStatus, getNewlyObtainedDetails (11 tests)
+  - `components/WhatsNewBanner.test.tsx` – render and accessibility (5 tests)
+  - **Scripts:** `npm run test` (single run), `npm run test:watch` (watch)
+- **Chat history planning** – Structured recording of conversations
+  - [docs/plans/2026-02-02-chat-history.md](docs/plans/2026-02-02-chat-history.md) – design note (structure, when to write, hybrid approach)
+  - UNIFIED-IMPLEMENTATION-PLAN Batch D – create/update session, append messages to DB, optional “My history” list
+  - Future: persist to Supabase `sessions` + `messages` (schema exists); optional “My history” when auth or device id exists
+
+### Changed
+- **FEATURE-MAP** – Landing UI (what’s new banner, orientation block, beta in footer); version roadmap (v1.2.4 current, v1.3.0/v1.4.0/chat history planned); file structure (WhatsNewBanner, constants, types); last updated 2026-02-02
+- **UNIFIED-IMPLEMENTATION-PLAN** – §1.3 Lobby orientation implemented; Batch D (chat history) and design note link; implementation order §5–6 and quick reference §8; last updated 2026-02-02
+- **Lobby** – Uses `WhatsNewBanner` instead of `LedBanner`; orientation block and footer with Beta; `LedBanner` retained for reuse
+
+### Technical
+- New: `components/WhatsNewBanner.tsx`, `lib/constants.ts` APP_RELEASE, `vitest.config.ts`, `vitest.setup.ts`, `lib/__tests__/*.test.ts`, `components/WhatsNewBanner.test.tsx`, `docs/plans/2026-02-02-chat-history.md`
+- Modified: `components/Lobby.tsx`, `lib/constants.ts`, `docs/FEATURE-MAP.md`, `docs/UNIFIED-IMPLEMENTATION-PLAN.md`, `package.json` (test scripts, devDependencies)
+- DevDependencies: vitest, @vitejs/plugin-react, jsdom, @testing-library/react, @testing-library/jest-dom, @testing-library/dom, vite-tsconfig-paths
+
+---
+
 ## [1.2.3] - 2026-02-01
 
 ### Fixed
@@ -219,18 +251,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### v1.3.0 - Goal-Oriented (Planned)
-- Goal selection before meeting
-- Post-meeting debrief summary
-- Unit tests for core components
+*No unreleased changes. All work is recorded under a version heading above.*
 
-### v1.4.0 - Rich Content (Planned)
-- Client documents and PDFs
-- Email thread context
-- Admin interface for content management
-
-### v1.5.0 - Production Ready (Planned)
-- User authentication (Supabase Auth)
-- Rate limiting
-- Response caching
-- Analytics dashboard
+For **planned** work and version roadmap, see [docs/UNIFIED-IMPLEMENTATION-PLAN.md](docs/UNIFIED-IMPLEMENTATION-PLAN.md) and [docs/FEATURE-MAP.md](docs/FEATURE-MAP.md).

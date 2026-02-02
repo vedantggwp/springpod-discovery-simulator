@@ -193,8 +193,8 @@ Students develop these professional skills:
 │  └─────────┘    └─────────┘    └─────────┘    └─────────┘    └────────┘│
 │                                                                          │
 │  See lobby       Choose from    Conduct        Gather all    Exit and   │
-│  with beta       3 scenario     discovery      required      reflect    │
-│  banner          cards          interview      information   on session │
+│  (what's new     3 scenario     discovery      required      reflect    │
+│  + orientation) cards          interview      information   on session │
 │                                                                          │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
@@ -206,10 +206,11 @@ Students develop these professional skills:
 **Goal:** Orient user and enable scenario selection
 
 **UI Elements:**
-- Beta version banner (LED signboard)
-- "SELECT YOUR CLIENT" heading
+- What's new banner (version, last updated date, one-line summary)
+- "What you can do" orientation block (pick client → read brief → discovery chat; details tracker, hints, View brief)
+- "SELECT A CLIENT ENGAGEMENT" heading
 - 3 scenario cards with avatars
-- Keyboard navigation hint
+- Keyboard navigation hint; Beta label in footer
 
 **User Actions:**
 - View available scenarios
@@ -670,52 +671,49 @@ git push origin main
 
 ## Version Roadmap
 
-### Current: v1.1.0 (January 2026)
+### Current: v1.2.4 (February 2026)
 
 **Features:**
-- 3 client scenarios
-- AI-powered conversations
-- Progress tracking (Details Tracker)
-- Hint system (multi-trigger)
-- Retro LED banner
-- Error boundary
-- Web layout fix
+- 3 client scenarios, rich briefs (ClientBrief), Supabase
+- AI-powered conversations (Claude Haiku + fallback)
+- Progress tracking (Details Tracker), hint system
+- What's new banner + Lobby orientation (Approach D); Beta in footer
+- Security: rate limiting, input validation, safe URLs, headers
+- UX: smart errors, retry, character count, session summary, first-message starters, View brief in chat
+- Error boundary, web layout fix
 
-### Planned: v1.2.0 - Security & Testing
+**For implementation order and batching,** see [UNIFIED-IMPLEMENTATION-PLAN.md](UNIFIED-IMPLEMENTATION-PLAN.md).
+
+### Planned: v1.3.0 - Quality & resilience
 
 **Goals:**
-- Prevent API abuse
-- Ensure code quality
-- Fix tooling issues
+- Lint, tests, perceived performance, session continuity
 
 **Features:**
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Rate Limiting | Planned | Upstash Redis, 10 req/min |
-| Unit Tests | Planned | Vitest, detailsTracker coverage |
-| ESLint v9 Config | Planned | Flat config migration |
+| ESLint 9 flat config | Planned | Batch A1 |
+| Unit tests (detailsTracker) | Planned | Batch A2; Vitest |
+| Loading skeleton | Planned | Batch A3 |
+| Hint panel empty-state copy | Planned | Batch A4 |
+| Session persistence (localStorage) | Planned | Batch B1; 30 min expiry |
 
-### Planned: v1.3.0 - Performance & UX
+### Planned: v1.4.0 - Performance & production
 
 **Goals:**
-- Better performance
-- Improved user experience
-- Session continuity
+- Next/Image for avatars; Upstash rate limiting (production)
 
-**Features:**
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Next/Image | Planned | Optimize avatar loading |
-| Loading Skeleton | Planned | Better perceived performance |
-| Session Persistence | Planned | localStorage, 30min expiry |
+### Planned: Chat history (structured)
+
+**Goal:** Collect conversations in a properly structured way; history of what's been talked about.
+
+**Design:** [docs/plans/2026-02-02-chat-history.md](plans/2026-02-02-chat-history.md). Persist sessions + messages to Supabase (schema exists); optional "My history" when auth or device id exists. See UNIFIED-IMPLEMENTATION-PLAN Batch D.
 
 ### Future Versions
 
 | Version | Theme | Key Features |
 |---------|-------|--------------|
-| v1.4.0 | Authentication | User accounts, OAuth |
-| v1.5.0 | Analytics | Performance tracking, instructor dashboard |
-| v1.6.0 | Export | Transcript download, LMS grade passback |
+| v1.5.0 | Production ready | Auth, analytics, export |
 | v2.0.0 | Multi-tenant | White-label, custom branding per org |
 
 ---
@@ -735,15 +733,20 @@ client-AI-chat-bot/
 │   └── page.tsx               # Main page
 ├── components/
 │   ├── ChatRoom.tsx           # Chat interface
-│   ├── DetailsTracker.tsx     # Progress tracking UI
-│   ├── ErrorBoundary.tsx      # Error handling
-│   ├── HintPanel.tsx          # Hints UI
-│   ├── LedBanner.tsx          # Beta banner
-│   └── Lobby.tsx              # Scenario selection
+│   ├── ClientBrief.tsx        # Pre-chat brief view
+│   ├── DetailsTracker.tsx    # Progress tracking UI
+│   ├── ErrorBoundary.tsx     # Error handling
+│   ├── HintPanel.tsx         # Hints UI
+│   ├── LedBanner.tsx         # LED-style banner (retained)
+│   ├── Lobby.tsx             # Scenario selection + orientation
+│   └── WhatsNewBanner.tsx    # Version / what's new top banner
 ├── lib/
-│   ├── detailsTracker.ts      # Completion logic
-│   ├── scenarios.ts           # Scenario definitions
-│   └── utils.ts               # Utilities
+│   ├── constants.ts           # CHAT_LIMITS, APP_RELEASE
+│   ├── detailsTracker.ts     # Completion logic
+│   ├── scenarios.ts          # Scenario definitions
+│   ├── types/
+│   │   └── database.ts        # DB types
+│   └── utils.ts              # Utilities
 ├── docs/
 │   ├── FEATURE-MAP.md         # This file
 │   ├── PLAN.md                # Architecture docs
@@ -817,4 +820,4 @@ MIT License - See LICENSE file for details.
 
 ---
 
-*Last updated: January 29, 2026 | Version: 1.1.0*
+*Last updated: February 2, 2026 | Version: 1.2.4*

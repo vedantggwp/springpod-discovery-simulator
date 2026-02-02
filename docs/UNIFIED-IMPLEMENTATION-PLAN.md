@@ -2,9 +2,9 @@
 
 **Purpose:** Single source of truth for what’s done, what’s next, and how to ship improvements quickly without breaking the product.  
 **Versioning:** Semantic (MAJOR.MINOR.PATCH). Features grouped into batches that can be done together.  
-**Last updated:** 2026-02-01
+**Last updated:** 2026-02-02
 
-**Active docs:** This file (implementation order). [FEATURE-MAP.md](FEATURE-MAP.md) (product spec, API reference, integration).  
+**Active docs:** This file (implementation order). [FEATURE-MAP.md](FEATURE-MAP.md) (product spec, API reference, integration). [VERSIONING.md](VERSIONING.md) (versioning policy and release checklist).  
 **Archived:** [docs/archive/](archive/) — PLAN.md, RECOMMENDATIONS-PLAN.md, V1.2-IMPLEMENTATION-PLAN.md; kept for reference only; implementation order lives here.
 
 ---
@@ -33,6 +33,16 @@ These match **RECOMMENDATIONS-PLAN** (security) and **expert UX** work; document
 | **UX – Discovery** | First-message starter prompts, “View brief” modal in chat, uncovered-detail feedback toast | FEATURE-MAP “Discovery Interview”; V1.2 “View Brief” |
 
 **Action:** Add a **v1.2.4** entry to CHANGELOG summarizing the above (security + UX). No new implementation required.
+
+### 1.3 Also implemented: Lobby orientation (Approach D)
+
+| Area | What was done |
+|------|----------------|
+| **Top banner** | Replaced beta marquee with “What’s new” strip: version, last updated date, one-line summary (from `lib/constants.ts` APP_RELEASE). |
+| **Lobby orientation** | “What you can do” block: pick client → read brief → discovery chat; use details tracker, hints, View brief. |
+| **Beta** | Moved to Lobby footer: “Springpod Discovery Simulator · Beta”. |
+
+**Files:** `lib/constants.ts` (APP_RELEASE), `components/WhatsNewBanner.tsx`, `components/Lobby.tsx`. `LedBanner` retained for reuse elsewhere.
 
 ---
 
@@ -105,6 +115,24 @@ These match **RECOMMENDATIONS-PLAN** (security) and **expert UX** work; document
 
 ---
 
+### Batch D – Chat history (structured) (v1.3.1 or v1.5.0)
+
+**Why:** Collect conversations in a properly structured way so there is a history of what’s been talked about; enables future “My past conversations”, export, analytics.
+
+**Design note:** [docs/plans/2026-02-02-chat-history.md](plans/2026-02-02-chat-history.md) – structure (sessions + messages in Supabase, schema already exists), when to write, hybrid approach (client creates session; server or client appends messages).
+
+| # | Task | Effort | Files | Deps |
+|---|------|--------|-------|------|
+| D1 | **Create/update session** | ~1 hr | `lib/sessionHistory.ts` or API, `components/ChatRoom.tsx`, `app/api/chat/route.ts` | Supabase (already used) |
+| D2 | **Append messages to DB** | ~1–2 hr | Same + `scripts/schema.sql` (messages table) | — |
+| D3 | **Optional: “My history” list** | ~2 hr | New route or Supabase query; Lobby or dedicated view | Auth or device id (later) |
+
+**Order:** D1 and D2 together (session + message persistence); D3 when auth or device-scoped history is needed.
+
+**Verification:** After a chat, session row exists with correct scenario_id, started_at, ended_at; messages table has all user/assistant messages in order. Optional: list past sessions for this user/device.
+
+---
+
 ### Future (v1.5.0+)
 
 | Feature | Source | Notes |
@@ -114,6 +142,7 @@ These match **RECOMMENDATIONS-PLAN** (security) and **expert UX** work; document
 | Analytics dashboard | RECOMMENDATIONS-PLAN §3.3 | DB + instructor view. |
 | AI-based hint triggering | RECOMMENDATIONS-PLAN §3.4 | Use AI to suggest hints. |
 | Goal selection, debrief | CHANGELOG Unreleased v1.3, V1.2 Out of Scope | Optional pre-meeting goal; post-meeting debrief. |
+| Chat history (structured) | This plan Batch D; [docs/plans/2026-02-02-chat-history.md](plans/2026-02-02-chat-history.md) | Persist sessions + messages to Supabase; history of what’s been talked about; “My history” when auth/device id exists. |
 
 ---
 
@@ -149,7 +178,10 @@ These match **RECOMMENDATIONS-PLAN** (security) and **expert UX** work; document
    - Test: avatars, rate limit with/without Upstash.  
    - Ship as v1.4.0.
 
-5. **v1.5.0**  
+5. **v1.3.1 or v1.5.0 – Batch D (optional)**  
+   - Implement D1–D2 (session + message persistence to Supabase); optional D3 (“My history” list). See [docs/plans/2026-02-02-chat-history.md](plans/2026-02-02-chat-history.md).
+
+6. **v1.5.0**  
    - Plan when needed; follow FEATURE-MAP + RECOMMENDATIONS-PLAN for auth, export, analytics.
 
 ---
@@ -161,6 +193,7 @@ These match **RECOMMENDATIONS-PLAN** (security) and **expert UX** work; document
 | **A** | `eslint.config.mjs`, `vitest.config.ts`, `lib/__tests__/detailsTracker.test.ts`, `components/Skeleton.tsx`, `app/loading.tsx` | `package.json`, `components/Lobby.tsx`, `components/HintPanel.tsx` |
 | **B** | `lib/sessionStorage.ts` | `components/ChatRoom.tsx`, `app/page.tsx` |
 | **C** | — | `next.config.ts`, `app/api/chat/route.ts`, `components/ChatRoom.tsx`, `components/Lobby.tsx`, `components/ClientBrief.tsx`, `.env.example`, `package.json` |
+| **D** | `lib/sessionHistory.ts` (or API route) | `components/ChatRoom.tsx`, `app/api/chat/route.ts`, `scripts/schema.sql` (optional user_id when auth) |
 
 ---
 
@@ -177,9 +210,10 @@ These match **RECOMMENDATIONS-PLAN** (security) and **expert UX** work; document
 
 ## 8. Quick reference – “What do I do next?”
 
-- **If you’re about to release current work:** Update CHANGELOG for v1.2.4 and tag.
+- **If you’re about to release:** Follow [VERSIONING.md](VERSIONING.md) (CHANGELOG, package.json, APP_RELEASE, tag).
 - **If you’re starting v1.3.0:** Do Batch A (A1–A4), then Batch B (B1); run lint, test, build; tag v1.3.0.
 - **If you’re starting v1.4.0:** Do Batch C (C1, C2); tag v1.4.0.
+- **If you’re adding chat history:** Do Batch D (D1–D2); see [docs/plans/2026-02-02-chat-history.md](plans/2026-02-02-chat-history.md).
 - **If you’re updating a doc:** Keep FEATURE-MAP, RECOMMENDATIONS-PLAN, and V1.2-IMPLEMENTATION-PLAN in sync with this plan and CHANGELOG.
 
 This plan is the single place to see how security, UX, RECOMMENDATIONS-PLAN, and FEATURE-MAP line up, and how to stagger and ship improvements without breaking the product.

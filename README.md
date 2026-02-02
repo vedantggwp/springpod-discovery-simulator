@@ -2,7 +2,7 @@
 
 An interactive training tool where students practice interviewing virtual clients to uncover business requirements. Features a retro 8-bit aesthetic and AI-powered conversations.
 
-**Version:** 1.2.4
+**Version:** 1.2.5
 
 ## Overview
 
@@ -165,10 +165,11 @@ Ensure your platform supports:
 
 ## Documentation
 
-- [CHANGELOG.md](CHANGELOG.md) - Version history
-- [docs/UNIFIED-IMPLEMENTATION-PLAN.md](docs/UNIFIED-IMPLEMENTATION-PLAN.md) - Implementation order and version roadmap
-- [docs/FEATURE-MAP.md](docs/FEATURE-MAP.md) - Product spec, API reference, integration
-- [docs/archive/](docs/archive/) - Archived plans (PLAN, RECOMMENDATIONS, V1.2)
+- [CHANGELOG.md](CHANGELOG.md) – Version history (what changed and when)
+- [docs/VERSIONING.md](docs/VERSIONING.md) – Versioning policy and release checklist
+- [docs/UNIFIED-IMPLEMENTATION-PLAN.md](docs/UNIFIED-IMPLEMENTATION-PLAN.md) – Implementation order and version roadmap
+- [docs/FEATURE-MAP.md](docs/FEATURE-MAP.md) – Product spec, API reference, integration
+- [docs/archive/](docs/archive/) – Archived plans (PLAN, RECOMMENDATIONS, V1.2)
 
 ## Development
 
@@ -182,9 +183,15 @@ npm run build
 # Run production build locally
 npm start
 
+# Run tests
+npm run test          # single run
+npm run test:watch   # watch mode
+
 # Lint code
 npm run lint
 ```
+
+Version and release process: keep [CHANGELOG.md](CHANGELOG.md) updated with changes; when releasing, bump `package.json` and `lib/constants.ts` APP_RELEASE, then tag. See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## License
 

@@ -3,7 +3,7 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { LedBanner } from "./LedBanner";
+import { WhatsNewBanner } from "./WhatsNewBanner";
 import type { ScenarioV2 } from "@/lib/scenarios";
 
 interface LobbyProps {
@@ -104,9 +104,9 @@ const ScenarioCard = memo(function ScenarioCard({
 export function Lobby({ scenarios, onSelect, isLoading }: LobbyProps) {
   return (
     <div className="min-h-screen bg-retro-bg flex flex-col items-center justify-center p-4 sm:p-8 pt-14">
-      {/* Beta Banner */}
+      {/* What's new banner (version + last updated + summary) */}
       <div className="fixed top-0 left-0 right-0 z-50">
-        <LedBanner text="★ BETA VERSION ★ BETA VERSION ★" />
+        <WhatsNewBanner />
       </div>
 
       {/* Title */}
@@ -123,10 +123,26 @@ export function Lobby({ scenarios, onSelect, isLoading }: LobbyProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="font-body text-gray-400 text-xl text-center mb-12 max-w-md"
+        className="font-body text-gray-400 text-xl text-center mb-6 max-w-md"
       >
         Review the client brief, then meet with your contact to discover their real business problem.
       </motion.p>
+
+      {/* What you can do (orientation) */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.25 }}
+        className="font-body text-gray-500 text-sm text-center mb-10 max-w-lg px-2"
+        role="region"
+        aria-label="How it works"
+      >
+        <ul className="list-none space-y-1.5 text-left inline-block">
+          <li>· Pick a client and read their brief.</li>
+          <li>· In the chat, uncover their real business problem (timed, limited questions).</li>
+          <li>· Use the <strong className="text-gray-400">details tracker</strong> and <strong className="text-gray-400">hints</strong> to stay on track; open <strong className="text-gray-400">View brief</strong> anytime during the chat.</li>
+        </ul>
+      </motion.div>
 
       {/* Loading State */}
       {isLoading && (
@@ -160,15 +176,21 @@ export function Lobby({ scenarios, onSelect, isLoading }: LobbyProps) {
         </div>
       )}
 
-      {/* Footer hint */}
-      <motion.p
+      {/* Footer: keyboard hint + beta */}
+      <motion.footer
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="font-body text-gray-600 text-sm text-center mt-12"
+        className="mt-12 flex flex-col items-center gap-2 text-center"
+        role="contentinfo"
       >
-        Use ↹ Tab to navigate • Press Enter to select
-      </motion.p>
+        <p className="font-body text-gray-600 text-sm">
+          Use ↹ Tab to navigate • Press Enter to select
+        </p>
+        <p className="font-body text-gray-600 text-xs">
+          Springpod Discovery Simulator · Beta
+        </p>
+      </motion.footer>
     </div>
   );
 }

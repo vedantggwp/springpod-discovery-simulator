@@ -51,3 +51,6 @@ next-env.d.ts
 # agents (dev files)
 .agents/
 .claude/
+
+# interview prep (local only, do not push)
+interviewpreparation.md

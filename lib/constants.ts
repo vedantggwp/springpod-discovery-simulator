@@ -9,3 +9,10 @@ export const CHAT_LIMITS = {
   /** Max number of messages per API request (conversation window) */
   MAX_MESSAGES_PER_REQUEST: 50,
 } as const;
+
+/** App version and release info for banner and footer. Update when releasing. */
+export const APP_RELEASE = {
+  VERSION: "1.2.5",
+  LAST_UPDATED: "2 Feb 2026",
+  WHATS_NEW_SUMMARY: "Lobby orientation, what's new banner, unit tests (Vitest), chat history planning.",
+} as const;
