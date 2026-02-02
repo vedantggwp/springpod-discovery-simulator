@@ -724,6 +724,7 @@ client-AI-chat-bot/
 │   ├── layout.tsx             # Root layout
 │   └── page.tsx               # Main page
 ├── components/
+│   ├── SpaceBackground.tsx    # Dynamic space background (nebula + starfield)
 │   ├── ChatRoom.tsx           # Chat interface
 │   ├── ClientBrief.tsx        # Pre-chat brief view
 │   ├── DetailsTracker.tsx    # Progress tracking UI

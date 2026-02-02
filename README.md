@@ -1,6 +1,6 @@
 # Springpod Discovery Simulator
 
-An interactive training tool where students practice interviewing virtual clients to uncover business requirements. Features a retro 8-bit aesthetic and AI-powered conversations.
+An interactive training tool where students practice interviewing virtual clients to uncover business requirements. Features a Space-Grade Mission Control aesthetic (glassmorphism, parallax space background) and AI-powered conversations.
 
 **Version:** 1.2.6
 
@@ -72,7 +72,7 @@ Each scenario has hidden requirements that students must discover through effect
 - **Smart errors** - User-facing messages for rate limit, message too long, invalid scenario, and service unavailable; retry without full reload
 
 ### User experience
-- **8-Bit theme** - Retro pixel art avatars and terminal aesthetic
+- **Space-Grade Mission Control theme** – Glassmorphism cards, deep space background with mouse-reactive nebula and parallax stars, Inter typography, rocket-inspired interactions (launch button, orbital avatars, Mission Clock), fuel-gauge progress bars
 - **Markdown support** - AI responses render with proper formatting
 - **Auto-scroll** - Chat automatically follows new messages
 - **Mobile responsive** - Works on phones and tablets
@@ -105,6 +105,7 @@ Each scenario has hidden requirements that students must discover through effect
 │   ├── layout.tsx           # Root layout with fonts
 │   └── page.tsx             # Main page with state
 ├── components/
+│   ├── SpaceBackground.tsx   # Dynamic space background (nebula + starfield)
 │   ├── Lobby.tsx            # Client engagement selection
 │   ├── ClientBrief.tsx      # Pre-meeting brief
 │   ├── ChatRoom.tsx         # Chat interface

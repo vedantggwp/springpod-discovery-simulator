@@ -38,16 +38,16 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen bg-retro-bg flex flex-col items-center justify-center p-8">
-          <div className="max-w-md text-center">
-            <h1 className="font-heading text-terminal-green text-sm mb-4">
+        <div className="min-h-screen flex flex-col items-center justify-center p-8">
+          <div className="max-w-md text-center glass-card border border-white/10 rounded-lg p-6">
+            <h1 className="font-heading text-springpod-green text-springpod-glow text-sm mb-4">
               SYSTEM ERROR
             </h1>
             <p className="font-body text-red-400 text-lg mb-6">
               Something went wrong. The application encountered an unexpected error.
             </p>
             {this.state.error && (
-              <p className="font-body text-gray-500 text-sm mb-6 break-words">
+              <p className="font-body text-terminal-slate text-sm mb-6 break-words">
                 {this.state.error.message}
               </p>
             )}
@@ -55,10 +55,10 @@ export class ErrorBoundary extends Component<Props, State> {
               <button
                 onClick={this.handleReset}
                 className={cn(
-                  "font-heading text-sm text-terminal-green",
-                  "border-2 border-terminal-green px-4 py-2",
-                  "hover:bg-terminal-green hover:text-black transition-colors",
-                  "focus-visible:ring-2 focus-visible:ring-green-400"
+                  "font-heading text-sm text-springpod-green",
+                  "border-2 border-white/10 hover:border-springpod-green hover:shadow-neon-green px-4 py-2 rounded-lg",
+                  "hover:bg-springpod-green hover:text-black transition-all duration-200",
+                  "focus-visible:ring-2 focus-visible:ring-springpod-green"
                 )}
               >
                 TRY AGAIN

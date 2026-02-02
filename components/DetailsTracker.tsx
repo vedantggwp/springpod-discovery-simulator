@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import type { CompletionStatus } from "@/lib/detailsTracker";
 import { cn } from "@/lib/utils";
@@ -13,63 +13,70 @@ interface DetailsTrackerProps {
 export function DetailsTracker({ status, className }: DetailsTrackerProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const prefersReducedMotion = useReducedMotion();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isExpanded) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsExpanded(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isExpanded]);
 
   const { details, requiredObtained, requiredTotal, percentage, allRequiredComplete } =
     status;
 
   return (
-    <div className={cn("relative", className)}>
+    <div ref={containerRef} className={cn("relative", className)}>
       {/* Compact Progress Bar (Always Visible) */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         aria-expanded={isExpanded}
         aria-label={`Information gathered: ${percentage}%. Click to ${isExpanded ? "collapse" : "expand"} details.`}
         className={cn(
-          "w-full flex items-center gap-3 px-3 py-2",
-          "bg-slate-900/80 border border-green-900/50 rounded-sm",
-          "hover:bg-slate-800/80 transition-colors",
-          "focus-visible:ring-2 focus-visible:ring-green-400"
+          "w-full flex items-center gap-3 px-3 py-2 glass-card rounded-lg",
+          "border border-white/10 hover:border-springpod-green hover:shadow-neon-green transition-all duration-200",
+          "focus-visible:ring-2 focus-visible:ring-springpod-green"
         )}
       >
-        {/* Progress Ring */}
-        <div className="relative w-8 h-8 shrink-0">
-          <svg className="w-8 h-8 transform -rotate-90">
-            {/* Background circle */}
-            <circle
-              cx="16"
-              cy="16"
-              r="12"
-              fill="none"
-              stroke="#1f2937"
-              strokeWidth="3"
-            />
-            {/* Progress circle */}
-            <circle
-              cx="16"
-              cy="16"
-              r="12"
-              fill="none"
-              stroke={allRequiredComplete ? "#22c55e" : "#facc15"}
-              strokeWidth="3"
-              strokeDasharray={`${(percentage / 100) * 75.4} 75.4`}
-              strokeLinecap="round"
-              className="transition-all duration-500"
-            />
-          </svg>
-          <span className="absolute inset-0 flex items-center justify-center font-body text-sm text-gray-400">
-            {requiredObtained}/{requiredTotal}
-          </span>
-        </div>
-
-        {/* Label */}
-        <div className="flex-1 text-left">
-          <span className="font-body text-sm text-gray-300">
-            {allRequiredComplete ? (
-              <span className="text-green-400">All key info gathered!</span>
-            ) : (
-              "Info Progress"
-            )}
-          </span>
+        {/* Fuel-gauge progress bar (green → stellar-cyan) with optional shimmer */}
+        <div className="flex-1 min-w-0 flex flex-col gap-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-body text-sm text-gray-300 shrink-0">
+              {allRequiredComplete ? (
+                <span className="text-springpod-green">All key info gathered!</span>
+              ) : (
+                "Info Progress"
+              )}
+            </span>
+            <span className="font-body text-xs text-terminal-slate shrink-0">
+              {requiredObtained}/{requiredTotal}
+            </span>
+          </div>
+          <div className="h-1.5 w-full bg-slate-800/80 rounded overflow-hidden">
+            <div
+              className="relative h-full rounded transition-all duration-500 ease-out overflow-hidden"
+              style={{
+                width: `${percentage}%`,
+                background: "linear-gradient(90deg, #22C55E 0%, #0EA5E9 100%)",
+                boxShadow: "0 0 8px rgba(34, 197, 94, 0.4)",
+              }}
+            >
+              {!prefersReducedMotion && percentage > 0 && percentage < 100 && (
+                <span
+                  className="absolute inset-0 animate-fuel-shimmer opacity-80"
+                  style={{
+                    background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)",
+                    backgroundSize: "50% 100%",
+                  }}
+                  aria-hidden="true"
+                />
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Expand indicator */}
@@ -92,8 +99,8 @@ export function DetailsTracker({ status, className }: DetailsTrackerProps) {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="mt-2 p-3 bg-slate-900/60 border border-green-900/30 rounded-sm">
-              <h3 className="font-heading text-sm text-terminal-green mb-3">
+            <div className="mt-2 p-3 glass-card border border-white/10 rounded-lg">
+              <h3 className="font-heading text-sm text-springpod-green mb-3">
                 KEY INFORMATION
               </h3>
 
@@ -116,7 +123,7 @@ export function DetailsTracker({ status, className }: DetailsTrackerProps) {
                           "w-4 h-4 mt-0.5 shrink-0 flex items-center justify-center",
                           "border rounded-sm text-sm",
                           isObtained
-                            ? "bg-green-500/20 border-green-500 text-green-400"
+                            ? "bg-springpod-green/20 border-springpod-green text-springpod-green"
                             : "border-gray-600"
                         )}
                       >
@@ -144,9 +151,9 @@ export function DetailsTracker({ status, className }: DetailsTrackerProps) {
                 <motion.div
                   initial={prefersReducedMotion ? {} : { scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="mt-4 p-2 bg-green-900/20 border border-green-700/50 rounded-sm"
+                  className="mt-4 p-2 bg-springpod-green/20 border border-springpod-green/50 rounded-none"
                 >
-                  <p className="font-body text-sm text-green-400 text-center">
+                  <p className="font-body text-sm text-springpod-green text-center">
                     Great job! You&apos;ve gathered all the key information needed.
                   </p>
                 </motion.div>

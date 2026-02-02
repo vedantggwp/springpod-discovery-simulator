@@ -29,8 +29,20 @@ export function HintPanel({
   const [activeHints, setActiveHints] = useState<ActiveHint[]>([]);
   const [usedHintIds, setUsedHintIds] = useState<Set<string>>(new Set());
   const prefersReducedMotion = useReducedMotion();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const allHints = hints;
+
+  useEffect(() => {
+    if (!isExpanded) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsExpanded(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isExpanded]);
 
   // Check for keyword-triggered hints based on AI responses
   const checkKeywordHints = useCallback(() => {
@@ -131,18 +143,18 @@ export function HintPanel({
   };
 
   return (
-    <div className={cn("relative", className)}>
+    <div ref={containerRef} className={cn("relative", className)}>
       {/* Hint Button & Panel */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         aria-expanded={isExpanded}
         aria-label={`Hints panel. ${visibleHints.length} hints available. Click to ${isExpanded ? "collapse" : "expand"}.`}
         className={cn(
-          "w-full flex items-center gap-3 px-3 py-2",
-          "bg-slate-900/80 border border-yellow-900/50 rounded-sm",
-          "hover:bg-slate-800/80 transition-colors",
-          "focus-visible:ring-2 focus-visible:ring-yellow-400",
-          visibleHints.length > 0 && "border-yellow-500/50"
+          "w-full flex items-center gap-3 px-3 py-2 glass-card rounded-lg",
+          "border border-white/10 transition-all duration-200",
+          "hover:border-alert-amber hover:shadow-amber-glow",
+          "focus-visible:ring-2 focus-visible:ring-alert-amber",
+          visibleHints.length > 0 && "border-alert-amber/50"
         )}
       >
         {/* Icon */}
@@ -188,7 +200,7 @@ export function HintPanel({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="mt-2 p-3 bg-slate-900/60 border border-yellow-900/30 rounded-sm">
+            <div className="mt-2 p-3 glass-card border border-white/10 rounded-lg">
               <h3 className="font-heading text-sm text-yellow-400 mb-3">
                 HINTS
               </h3>

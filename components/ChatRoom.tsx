@@ -8,6 +8,7 @@ import { getContactPhotoUrl } from "@/lib/scenarios";
 import { getCompletionStatus, getNewlyObtainedDetails } from "@/lib/detailsTracker";
 import { cn, safeImageUrl, safeMarkdownLink } from "@/lib/utils";
 import { CHAT_LIMITS, getDisplayContentIfEndMeeting } from "@/lib/constants";
+import { AI_CONFIG } from "@/lib/ai-config";
 import { DetailsTracker } from "./DetailsTracker";
 import { HintPanel } from "./HintPanel";
 import type { ScenarioV2 } from "@/lib/scenarios";
@@ -183,77 +184,100 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
   const isLastQuestion = questionsLeft === 1 && !isSessionEnded;
 
   return (
-    <div className="h-[100dvh] w-full max-w-2xl mx-auto flex flex-col bg-terminal-dark border-x border-green-900/30">
-      {/* Header with Contact Photo */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-green-900 bg-slate-900/50">
+    <div className="h-[100dvh] w-full max-w-2xl mx-auto flex flex-col glass-card border-x border-white/10">
+      {/* Header: EXIT + clickable avatar (opens brief, orbital on primary avatar) */}
+      <header className="glass-card flex items-center justify-between px-4 py-3 border-b border-white/10">
         <div className="flex items-center gap-2">
           <button
             onClick={onBack}
             aria-label="Exit interview and return to client selection"
             className={cn(
-              "font-heading text-terminal-green text-sm",
+              "font-heading text-springpod-green text-sm",
               "hover:text-green-300 transition-colors",
-              "focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900",
+              "focus-visible:ring-2 focus-visible:ring-springpod-green focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900",
               "px-2 py-1"
             )}
           >
             ← EXIT
           </button>
-          <button
-            type="button"
-            onClick={() => setShowBriefModal(true)}
-            aria-label="View client brief again"
-            className="font-body text-sm text-gray-400 hover:text-terminal-green transition-colors underline"
-          >
-            View brief
-          </button>
         </div>
 
         <div className="flex items-center gap-3">
-          <img
-            src={contactPhotoUrl}
-            alt={scenario.contact_name}
-            width={48}
-            height={48}
-            className="rounded-none border border-green-900/50 bg-slate-800"
-          />
+          <motion.button
+            type="button"
+            onClick={() => setShowBriefModal(true)}
+            aria-label="View client brief again"
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.98 }}
+            className={cn(
+              "relative rounded-lg border-2 border-white/10 overflow-visible",
+              "transition-all duration-200",
+              "hover:border-springpod-green hover:shadow-neon-green focus-visible:ring-2 focus-visible:ring-springpod-green focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+            )}
+          >
+            <img
+              src={contactPhotoUrl}
+              alt=""
+              width={48}
+              height={48}
+              className="rounded-lg block"
+            />
+            {!prefersReducedMotion && (
+              <span
+                className="absolute left-1/2 top-1/2 w-1.5 h-1.5 rounded-full bg-springpod-green shadow-[0_0_4px_rgba(34,197,94,0.8)] animate-orbit-sm pointer-events-none"
+                aria-hidden="true"
+                style={{ marginLeft: "-3px", marginTop: "-3px" }}
+              />
+            )}
+          </motion.button>
           <div className="text-right">
-            <h1 className="font-heading text-terminal-green text-sm">
+            <h1 className="font-heading text-springpod-green text-springpod-glow text-sm">
               {scenario.contact_name}
             </h1>
-            <p className="font-body text-gray-400 text-sm">
-              {scenario.contact_role} • {scenario.company_name}
-            </p>
+            {isLoading ? (
+              <p className="font-body text-stellar-cyan text-xs animate-pulse" role="status">
+                Neural Link: Processing
+              </p>
+            ) : (
+              <p className="font-body text-gray-400 text-sm">
+                {scenario.contact_role} • {scenario.company_name}
+              </p>
+            )}
           </div>
         </div>
       </header>
 
-      {/* Tracking Panels */}
-      <div className="flex gap-2 px-4 py-2 bg-slate-900/30 border-b border-green-900/30">
-        <DetailsTracker status={completionStatus} className="flex-1" />
+      {/* HUD Dashboard: equal-width Info Progress + Hints */}
+      <div className="grid grid-cols-2 gap-2 px-4 py-2 glass-card border-b border-white/10">
+        <DetailsTracker status={completionStatus} className="min-w-0" />
         <HintPanel
           hints={scenario.hints || []}
           messages={messages}
           lastUserMessageTime={lastUserMessageTime}
-          className="flex-1"
+          className="min-w-0"
         />
       </div>
 
       {/* In-chat goal */}
-      <p className="px-4 py-1.5 text-center font-body text-sm text-gray-500 border-b border-green-900/20">
+      <p className="px-4 py-1.5 text-center font-body text-sm text-terminal-slate border-b border-white/10">
         Goal: Uncover their real business problem
       </p>
 
-      {/* Uncovered-detail feedback */}
+      {/* Aha! moment: uncovered-detail pill (alert-amber + glitch) */}
       <AnimatePresence>
         {uncoveredLabel ? (
           <motion.div
             initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={
+              prefersReducedMotion
+                ? { opacity: 1, y: 0 }
+                : { opacity: 1, y: 0, x: [0, 2, -2, 0] }
+            }
             exit={{ opacity: 0 }}
-            className="mx-4 mt-2 px-3 py-2 rounded-sm bg-green-900/30 border border-green-700/50"
+            transition={{ x: { duration: 0.15 } }}
+            className="mx-4 mt-2 px-3 py-2 rounded-none bg-alert-amber/10 border-2 border-alert-amber shadow-amber-glow"
           >
-            <span className="font-body text-sm text-green-400">
+            <span className="font-body text-sm text-alert-amber">
               ✓ You uncovered: <strong>{uncoveredLabel}</strong>
             </span>
           </motion.div>
@@ -292,13 +316,14 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
                     alt=""
                     width={32}
                     height={32}
-                    className="rounded-none shrink-0 self-start mt-1 border border-green-900/30 bg-slate-800"
+                    className="rounded-lg shrink-0 self-start mt-1 border border-white/10"
                     aria-hidden="true"
                   />
                   <div
                     className={cn(
-                      "max-w-[80%] prose prose-invert prose-green prose-sm font-body",
-                      "text-terminal-green text-lg leading-relaxed"
+                      "max-w-[80%] prose prose-invert prose-sm font-body glass-card",
+                      "rounded-lg border border-white/10 px-3 py-2",
+                      "text-springpod-green text-lg leading-relaxed"
                     )}
                   >
                     <ReactMarkdown urlTransform={safeMarkdownLink}>
@@ -307,8 +332,8 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
                   </div>
                 </>
               ) : (
-                <div className="max-w-[80%] bg-slate-800/50 px-4 py-2 rounded-sm border-l-2 border-cyan-500">
-                  <p className="font-body text-cyan-300 text-lg leading-relaxed">
+                <div className="max-w-[80%] glass-card px-4 py-2 rounded-lg border border-white/10">
+                  <p className="font-body text-stellar-cyan text-lg leading-relaxed">
                     {message.content}
                   </p>
                 </div>
@@ -317,7 +342,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
           );
         })}
 
-        {/* Typing Indicator */}
+        {/* Typing Indicator (Neural Link) */}
         {isLoading ? (
           <motion.div
             initial={prefersReducedMotion ? false : { opacity: 0 }}
@@ -329,11 +354,11 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
               alt=""
               width={32}
               height={32}
-              className="rounded-none border border-green-900/30 bg-slate-800"
+              className="rounded-lg border border-white/10"
               aria-hidden="true"
             />
-            <span className="font-body text-gray-500 text-lg">
-              {scenario.contact_name.split(" ")[0]} is typing
+            <span className="font-body text-stellar-cyan text-lg" role="status">
+              Neural Link: Processing
               <span className="animate-blink">…</span>
             </span>
           </motion.div>
@@ -352,11 +377,11 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
                   disabled={isLoading}
                   aria-label={errorUI.retryLabel}
                   className={cn(
-                    "font-heading text-sm text-terminal-green",
-                    "border border-terminal-green px-3 py-1.5",
-                    "hover:bg-terminal-green hover:text-black transition-colors",
+                    "font-heading text-sm text-springpod-green",
+                    "border border-springpod-green shadow-green-glow px-3 py-1.5",
+                    "hover:bg-springpod-green hover:text-black transition-colors",
                     "disabled:opacity-50 disabled:cursor-not-allowed",
-                    "focus-visible:ring-2 focus-visible:ring-green-400"
+                    "focus-visible:ring-2 focus-visible:ring-springpod-green"
                   )}
                 >
                   {errorUI.retryLabel}
@@ -365,7 +390,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
               <button
                 onClick={onBack}
                 aria-label="Back to client selection"
-                className="font-body text-terminal-green underline hover:text-green-300"
+                className="font-body text-springpod-green underline hover:text-green-300"
               >
                 {errorUI.canRetry ? "Back to lobby" : errorUI.retryLabel}
               </button>
@@ -379,7 +404,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
 
       {/* Input Area or Session Ended */}
       {isSessionEnded ? (
-        <div className="px-4 py-6 border-t border-green-900 bg-slate-900/50 text-center">
+        <div className="px-4 py-6 border-t border-white/10 glass-card text-center">
           {meetingEndedByConduct ? (
             <>
               <p className="font-body text-red-400 text-lg mb-2">
@@ -404,10 +429,10 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
           <button
             onClick={onBack}
             className={cn(
-              "font-heading text-sm text-terminal-green",
-              "border-2 border-terminal-green px-4 py-2",
-              "hover:bg-terminal-green hover:text-black transition-colors",
-              "focus-visible:ring-2 focus-visible:ring-green-400"
+              "font-heading text-sm text-springpod-green",
+              "border-2 border-springpod-green shadow-green-glow px-4 py-2",
+              "hover:bg-springpod-green hover:text-black transition-colors",
+              "focus-visible:ring-2 focus-visible:ring-springpod-green"
             )}
           >
             Interview another client
@@ -416,7 +441,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
       ) : (
         <form
           onSubmit={handleSubmitWithFocus}
-          className="flex flex-col gap-1 px-4 py-3 border-t border-green-900 bg-slate-900/50"
+          className="flex flex-col gap-1 px-4 py-3 border-t border-white/10 glass-card"
         >
           {/* Last-question nudge */}
           {isLastQuestion ? (
@@ -437,9 +462,9 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
                     inputRef.current?.focus();
                   }}
                   className={cn(
-                    "font-body text-sm px-3 py-1.5 rounded-sm",
-                    "border border-green-700/50 text-gray-400 hover:text-terminal-green hover:border-green-600",
-                    "transition-colors focus-visible:ring-2 focus-visible:ring-green-400"
+                    "font-body text-sm px-3 py-1.5 rounded-none",
+                    "border border-springpod-green/50 text-gray-400 hover:text-springpod-green hover:border-springpod-green",
+                    "transition-colors focus-visible:ring-2 focus-visible:ring-springpod-green"
                   )}
                 >
                   {prompt}
@@ -450,7 +475,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
 
           <div className="flex items-center gap-2">
             <span
-              className="font-body text-terminal-green text-2xl shrink-0"
+              className="font-body text-springpod-green text-2xl shrink-0"
               aria-hidden="true"
             >
               &gt;
@@ -477,11 +502,11 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
               disabled={isLoading || !input.trim()}
               aria-label="Send message"
               className={cn(
-                "font-heading text-sm text-terminal-green shrink-0",
-                "px-3 py-1 border border-terminal-green",
-                "hover:bg-terminal-green hover:text-black transition-colors",
+                "font-heading text-sm text-springpod-green shrink-0",
+                "px-3 py-1 border border-springpod-green shadow-green-glow",
+                "hover:bg-springpod-green hover:text-black transition-colors",
                 "disabled:opacity-50 disabled:cursor-not-allowed",
-                "focus-visible:ring-2 focus-visible:ring-green-400"
+                "focus-visible:ring-2 focus-visible:ring-springpod-green"
               )}
             >
               SEND
@@ -506,22 +531,32 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
         </form>
       )}
 
-      {/* Turn counter */}
+      {/* Mission Clock: questions counter + telemetry (pulse on count change) */}
       {!isSessionEnded ? (
-        <div className="text-center py-1 bg-slate-900/30">
-          <span
+        <div className="flex flex-col gap-1 py-1.5 px-4 glass-card border-t border-white/10">
+          <motion.span
+            key={userMessageCount}
+            initial={prefersReducedMotion ? false : { scale: 1.05, opacity: 1 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.2 }}
             className={cn(
-              "font-body text-sm",
+              "font-heading text-xs font-body inline-block",
               MAX_TURNS - userMessageCount <= 2 && userMessageCount < MAX_TURNS
-                ? "text-amber-400"
-                : "text-gray-600"
+                ? "text-alert-amber"
+                : "text-springpod-green"
             )}
+            aria-label={`Questions ${userMessageCount} of ${MAX_TURNS}. ${MAX_TURNS - userMessageCount} left.`}
           >
-            Questions: {userMessageCount}/{MAX_TURNS}
+            [QUERIES {String(userMessageCount).padStart(2, "0")}/{String(MAX_TURNS).padStart(2, "0")}]
             {MAX_TURNS - userMessageCount <= 2 && userMessageCount < MAX_TURNS
               ? ` · ${MAX_TURNS - userMessageCount} left`
               : ""}
-          </span>
+          </motion.span>
+          <div className="font-body text-[10px] text-terminal-slate flex flex-wrap gap-x-4 gap-y-0" aria-hidden="true">
+            <span>LATENCY: 24ms</span>
+            <span>ENCRYPTION: AES-256</span>
+            <span>MODEL: {AI_CONFIG.primary.model.split("/").pop()?.toUpperCase().replace(/-/g, "-") ?? "CLAUDE-3-HAIKU"}</span>
+          </div>
         </div>
       ) : null}
 
@@ -543,10 +578,10 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-none border-2 border-green-700 bg-slate-900 p-6 shadow-xl"
+              className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-lg glass-card border border-white/10 p-6"
             >
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-heading text-terminal-green text-sm">CLIENT BRIEF</h2>
+                <h2 className="font-heading text-springpod-green text-springpod-glow text-sm">CLIENT BRIEF</h2>
                 <button
                   type="button"
                   onClick={() => setShowBriefModal(false)}
@@ -556,9 +591,9 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
                   ✕
                 </button>
               </div>
-              <h3 className="font-heading text-terminal-green text-sm mb-2">{scenario.company_name}</h3>
+              <h3 className="font-heading text-springpod-green text-sm mb-2">{scenario.company_name}</h3>
               {scenario.company_why_contacted ? (
-                <p className="font-body text-gray-300 text-sm italic border-l-2 border-cyan-500 pl-3 mb-3">
+                <p className="font-body text-gray-300 text-sm italic border-l-2 border-stellar-cyan pl-3 mb-3">
                   {scenario.company_why_contacted}
                 </p>
               ) : null}
@@ -566,7 +601,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
                 <ul className="space-y-1 mb-3 font-body text-sm text-gray-400">
                   {(scenario.company_context ?? []).map((item, i) => (
                     <li key={i} className="flex gap-2">
-                      <span className="text-terminal-green">•</span>
+                      <span className="text-springpod-green">•</span>
                       {item}
                     </li>
                   ))}
@@ -574,7 +609,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
               ) : null}
               <div className="pt-3 border-t border-green-900/50">
                 <p className="font-body text-sm text-gray-300">
-                  <span className="text-terminal-green">{scenario.contact_name}</span>
+                  <span className="text-springpod-green">{scenario.contact_name}</span>
                   {" · "}
                   {scenario.contact_role}
                 </p>
@@ -583,10 +618,10 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
                 type="button"
                 onClick={() => setShowBriefModal(false)}
                 className={cn(
-                  "mt-4 w-full font-heading text-sm text-terminal-green",
-                  "border border-terminal-green px-4 py-2",
-                  "hover:bg-terminal-green hover:text-black transition-colors",
-                  "focus-visible:ring-2 focus-visible:ring-green-400"
+                  "mt-4 w-full font-heading text-sm text-springpod-green",
+                  "border border-springpod-green shadow-green-glow px-4 py-2",
+                  "hover:bg-springpod-green hover:text-black transition-colors",
+                  "focus-visible:ring-2 focus-visible:ring-springpod-green"
                 )}
               >
                 Back to interview

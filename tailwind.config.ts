@@ -9,10 +9,10 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        heading: ["var(--font-heading)", "monospace"],
-        body: ["var(--font-body)", "monospace"],
+        heading: ["var(--font-sans)", "sans-serif"],
+        body: ["var(--font-sans)", "sans-serif"],
       },
-      // Typography: +2px across scale for better readability (xs 12→14, sm 14→16, base 16→18, lg 18→20, xl 20→22)
+      // Typography: +2px across scale for better readability
       fontSize: {
         xs: ["0.875rem", { lineHeight: "1.25rem" }],
         sm: ["1rem", { lineHeight: "1.5rem" }],
@@ -24,9 +24,19 @@ export default {
         "terminal-green": "#22c55e",
         "terminal-dark": "#0a0a0a",
         "retro-bg": "#020617",
+        "navy-dark": "#020617",
+        "springpod-green": "#22C55E",
+        "stellar-cyan": "#0EA5E9",
+        "alert-amber": "#F59E0B",
+        "terminal-slate": "#64748B",
+      },
+      boxShadow: {
+        "green-glow": "0 0 15px rgba(34, 197, 94, 0.4)",
+        "neon-green": "0 0 20px rgba(34, 197, 94, 0.4)",
+        "amber-glow": "0 0 12px rgba(245, 158, 11, 0.5)",
       },
       animation: {
-        "blink": "blink 1s step-end infinite",
+        blink: "blink 1s step-end infinite",
       },
       keyframes: {
         blink: {

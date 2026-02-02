@@ -2,6 +2,82 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Space-Grade Mission Control: deep space gradient */
+@layer base {
+  body {
+    background: linear-gradient(to bottom, #020617, #0f172a);
+    min-height: 100vh;
+    position: relative;
+  }
+}
+
+/* Glass card: single source for glassmorphism */
+@layer components {
+  .glass-card {
+    @apply backdrop-blur-md bg-white/5 border border-white/10;
+  }
+
+  .text-springpod-glow {
+    text-shadow:
+      0 0 8px rgba(34, 197, 94, 0.5),
+      0 0 16px rgba(34, 197, 94, 0.3);
+  }
+}
+
+/* Fuel-gauge shimmer for DetailsTracker progress bar */
+@keyframes fuel-gauge-shimmer {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-fuel-shimmer {
+  animation: fuel-gauge-shimmer 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fuel-shimmer {
+    animation: none;
+  }
+}
+
+/* Orbital dot around primary avatars (centered in wrapper, then orbit radius 42px) */
+@keyframes orbit {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg) translateX(42px) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg) translateX(42px) rotate(-360deg);
+  }
+}
+
+.animate-orbit {
+  animation: orbit 4s linear infinite;
+}
+
+@keyframes orbit-sm {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg) translateX(26px) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg) translateX(26px) rotate(-360deg);
+  }
+}
+
+.animate-orbit-sm {
+  animation: orbit-sm 4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-orbit,
+  .animate-orbit-sm {
+    animation: none;
+  }
+}
+
 /* Reduced motion support (Web Interface Guidelines) */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -20,7 +96,7 @@
   outline-offset: 2px;
 }
 
-/* Custom scrollbar for retro theme */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -38,9 +114,9 @@
   background: #16a34a;
 }
 
-/* Typography overrides for retro font */
+/* Typography overrides */
 .prose {
-  font-family: var(--font-body), monospace;
+  font-family: var(--font-body), sans-serif;
 }
 
 .prose strong {
@@ -55,12 +131,12 @@
   color: #22c55e;
 }
 
-/* LED Banner Styles */
+/* LED Banner Styles (WhatsNewBanner / LedBanner) */
 .led-text {
-  font-family: var(--font-heading), monospace;
+  font-family: var(--font-heading), sans-serif;
   font-size: 0.875rem;
   color: #22c55e;
-  text-shadow: 
+  text-shadow:
     0 0 5px #22c55e,
     0 0 10px #22c55e,
     0 0 20px #22c55e,
@@ -85,5 +161,27 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee {
     animation: none;
+  }
+}
+
+/* Start Meeting pulse glow (disabled in reduced-motion) */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(34, 197, 94, 0.6);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-glow {
+    animation: none;
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
   }
 }

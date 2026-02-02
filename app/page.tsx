@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Lobby } from "@/components/Lobby";
 import { ClientBrief } from "@/components/ClientBrief";
 import { ChatRoom } from "@/components/ChatRoom";
@@ -15,8 +16,8 @@ export default function Home() {
   const [selectedScenario, setSelectedScenario] = useState<ScenarioV2 | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const prefersReducedMotion = useReducedMotion();
 
-  // Fetch scenarios from Supabase on mount
   useEffect(() => {
     async function loadScenarios() {
       try {
@@ -34,7 +35,6 @@ export default function Home() {
     loadScenarios();
   }, []);
 
-  // Handle scenario selection -> go to brief
   const handleSelectScenario = (scenarioId: string) => {
     const scenario = scenarios.find((s) => s.id === scenarioId);
     if (scenario) {
@@ -43,26 +43,23 @@ export default function Home() {
     }
   };
 
-  // Handle start meeting -> go to chat
   const handleStartMeeting = () => {
     setView("chat");
   };
 
-  // Handle back to lobby
   const handleBackToLobby = () => {
     setSelectedScenario(null);
     setView("lobby");
   };
 
-  // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-retro-bg flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
           <p className="font-body text-red-400 text-lg mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="font-heading text-sm text-terminal-green border-2 border-terminal-green px-4 py-2 hover:bg-terminal-green hover:text-black transition-colors"
+            className="font-heading text-sm text-springpod-green border-2 border-springpod-green shadow-green-glow px-4 py-2 hover:bg-springpod-green hover:text-black transition-colors"
           >
             RETRY
           </button>
@@ -71,26 +68,56 @@ export default function Home() {
     );
   }
 
+  const transitionProps = prefersReducedMotion
+    ? { duration: 0 }
+    : { type: "tween" as const, duration: 0.25 };
+
   return (
     <ErrorBoundary>
-      {view === "chat" && selectedScenario ? (
-        <ChatRoom
-          scenario={selectedScenario}
-          onBack={handleBackToLobby}
-        />
-      ) : view === "brief" && selectedScenario ? (
-        <ClientBrief
-          scenario={selectedScenario}
-          onStartMeeting={handleStartMeeting}
-          onBack={handleBackToLobby}
-        />
-      ) : (
-        <Lobby
-          scenarios={scenarios}
-          onSelect={handleSelectScenario}
-          isLoading={isLoading}
-        />
-      )}
+      <AnimatePresence mode="wait">
+        {view === "chat" && selectedScenario ? (
+          <motion.div
+            key={`chat-${selectedScenario.id}`}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            transition={transitionProps}
+            className="w-full h-full"
+          >
+            <ChatRoom scenario={selectedScenario} onBack={handleBackToLobby} />
+          </motion.div>
+        ) : view === "brief" && selectedScenario ? (
+          <motion.div
+            key={`brief-${selectedScenario.id}`}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            transition={transitionProps}
+            className="w-full h-full"
+          >
+            <ClientBrief
+              scenario={selectedScenario}
+              onStartMeeting={handleStartMeeting}
+              onBack={handleBackToLobby}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="lobby"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            transition={transitionProps}
+            className="w-full h-full"
+          >
+            <Lobby
+              scenarios={scenarios}
+              onSelect={handleSelectScenario}
+              isLoading={isLoading}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </ErrorBoundary>
   );
 }
