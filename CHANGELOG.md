@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+*No unreleased changes. All work is recorded under a version heading below.*
+
+For **planned** work and version roadmap, see [docs/UNIFIED-IMPLEMENTATION-PLAN.md](docs/UNIFIED-IMPLEMENTATION-PLAN.md) and [docs/FEATURE-MAP.md](docs/FEATURE-MAP.md).
+
+---
+
+## [1.2.6] - 2026-02-02
+
 ### Fixed
 - **Lobby banner overlap** – Increased top padding so the WhatsNewBanner no longer covers the "SELECT A CLIENT ENGAGEMENT" heading (`pt-28 sm:pt-24` instead of `pt-14`). The banner can wrap to multiple lines; content now starts below it.
 - **Chat message length limit** – Limit is now applied **per user message** only, not to the whole conversation.

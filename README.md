@@ -2,7 +2,7 @@
 
 An interactive training tool where students practice interviewing virtual clients to uncover business requirements. Features a retro 8-bit aesthetic and AI-powered conversations.
 
-**Version:** 1.2.5
+**Version:** 1.2.6
 
 ## Overview
 
