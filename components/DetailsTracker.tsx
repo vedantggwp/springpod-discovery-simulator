@@ -56,7 +56,7 @@ export function DetailsTracker({ status, className }: DetailsTrackerProps) {
               className="transition-all duration-500"
             />
           </svg>
-          <span className="absolute inset-0 flex items-center justify-center font-body text-xs text-gray-400">
+          <span className="absolute inset-0 flex items-center justify-center font-body text-sm text-gray-400">
             {requiredObtained}/{requiredTotal}
           </span>
         </div>
@@ -93,7 +93,7 @@ export function DetailsTracker({ status, className }: DetailsTrackerProps) {
             className="overflow-hidden"
           >
             <div className="mt-2 p-3 bg-slate-900/60 border border-green-900/30 rounded-sm">
-              <h3 className="font-heading text-[10px] text-terminal-green mb-3">
+              <h3 className="font-heading text-sm text-terminal-green mb-3">
                 KEY INFORMATION
               </h3>
 
@@ -114,7 +114,7 @@ export function DetailsTracker({ status, className }: DetailsTrackerProps) {
                       <span
                         className={cn(
                           "w-4 h-4 mt-0.5 shrink-0 flex items-center justify-center",
-                          "border rounded-sm text-xs",
+                          "border rounded-sm text-sm",
                           isObtained
                             ? "bg-green-500/20 border-green-500 text-green-400"
                             : "border-gray-600"
@@ -129,7 +129,7 @@ export function DetailsTracker({ status, className }: DetailsTrackerProps) {
                           {item.detail.label}
                         </span>
                         {!isRequired && (
-                          <span className="ml-1 text-xs text-gray-600">
+                          <span className="ml-1 text-sm text-gray-600">
                             (optional)
                           </span>
                         )}

@@ -6,7 +6,9 @@ import { APP_RELEASE } from "@/lib/constants";
 describe("WhatsNewBanner", () => {
   it("renders version from APP_RELEASE", () => {
     render(<WhatsNewBanner />);
-    expect(screen.getByText(/v\d+\.\d+\.\d+/)).toBeInTheDocument();
+    const elements = screen.getAllByText(/v\d+\.\d+\.\d+/);
+    expect(elements.length).toBeGreaterThanOrEqual(1);
+    expect(elements[0]).toBeInTheDocument();
   });
 
   it("renders last updated date", () => {

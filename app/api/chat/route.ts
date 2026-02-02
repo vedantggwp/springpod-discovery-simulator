@@ -2,7 +2,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { streamText, type CoreMessage } from "ai";
 import { createServerClient } from "@/lib/supabase";
 import { AI_CONFIG } from "@/lib/ai-config";
-import { CHAT_LIMITS, SYSTEM_PROMPT_RULES } from "@/lib/constants";
+import { CHAT_LIMITS, CRITICAL_SYSTEM_PREFIX, SYSTEM_PROMPT_RULES } from "@/lib/constants";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { scenarios, type ScenarioId } from "@/lib/scenarios";
 
@@ -109,7 +109,7 @@ export async function POST(req: Request) {
       systemPrompt = fallback.systemPrompt;
     }
 
-    const fullSystemPrompt = systemPrompt + SYSTEM_PROMPT_RULES;
+    const fullSystemPrompt = CRITICAL_SYSTEM_PREFIX + "\n\n" + systemPrompt + SYSTEM_PROMPT_RULES;
 
     await new Promise((resolve) => setTimeout(resolve, AI_CONFIG.thinkingDelayMs));
 

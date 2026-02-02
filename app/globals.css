@@ -58,7 +58,7 @@
 /* LED Banner Styles */
 .led-text {
   font-family: var(--font-heading), monospace;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: #22c55e;
   text-shadow: 
     0 0 5px #22c55e,

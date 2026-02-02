@@ -62,7 +62,7 @@ export default function Home() {
           <p className="font-body text-red-400 text-lg mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="font-heading text-xs text-terminal-green border-2 border-terminal-green px-4 py-2 hover:bg-terminal-green hover:text-black transition-colors"
+            className="font-heading text-sm text-terminal-green border-2 border-terminal-green px-4 py-2 hover:bg-terminal-green hover:text-black transition-colors"
           >
             RETRY
           </button>

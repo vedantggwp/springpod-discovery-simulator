@@ -7,7 +7,7 @@ import ReactMarkdown from "react-markdown";
 import { getContactPhotoUrl } from "@/lib/scenarios";
 import { getCompletionStatus, getNewlyObtainedDetails } from "@/lib/detailsTracker";
 import { cn, safeImageUrl, safeMarkdownLink } from "@/lib/utils";
-import { CHAT_LIMITS } from "@/lib/constants";
+import { CHAT_LIMITS, getDisplayContentIfEndMeeting } from "@/lib/constants";
 import { DetailsTracker } from "./DetailsTracker";
 import { HintPanel } from "./HintPanel";
 import type { ScenarioV2 } from "@/lib/scenarios";
@@ -87,6 +87,8 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
   const [lastUserMessageTime, setLastUserMessageTime] = useState<number | null>(null);
   const [showBriefModal, setShowBriefModal] = useState(false);
   const [uncoveredLabel, setUncoveredLabel] = useState<string | null>(null);
+  const [meetingEndedByConduct, setMeetingEndedByConduct] = useState(false);
+  const [finalMessageFromConduct, setFinalMessageFromConduct] = useState<string | null>(null);
   const prevCompletionStatusRef = useRef<ReturnType<typeof getCompletionStatus> | null>(null);
 
   const MAX_TURNS = scenario.max_turns || 15;
@@ -120,9 +122,9 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
 
   const errorUI = useMemo(() => getErrorMessage(error), [error]);
 
-  // Calculate turns and session end
+  // Calculate turns and session end (turn limit or client ended meeting due to conduct)
   const userMessageCount = messages.filter((m) => m.role === "user").length;
-  const isSessionEnded = userMessageCount >= MAX_TURNS;
+  const isSessionEnded = userMessageCount >= MAX_TURNS || meetingEndedByConduct;
 
   // Track completion status for required details (pass data directly from DB scenario)
   const completionStatus = useMemo(
@@ -152,6 +154,18 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
     }
   }, [messages]);
 
+  // Detect [END_MEETING]...[/END_MEETING] in latest assistant message (client ended meeting due to conduct)
+  useEffect(() => {
+    if (meetingEndedByConduct || isLoading) return;
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== "assistant" || typeof last.content !== "string") return;
+    const { meetingEnded, finalMessage } = getDisplayContentIfEndMeeting(last.content);
+    if (meetingEnded) {
+      setMeetingEndedByConduct(true);
+      setFinalMessageFromConduct(finalMessage);
+    }
+  }, [messages, isLoading, meetingEndedByConduct]);
+
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -177,7 +191,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
             onClick={onBack}
             aria-label="Exit interview and return to client selection"
             className={cn(
-              "font-heading text-terminal-green text-xs",
+              "font-heading text-terminal-green text-sm",
               "hover:text-green-300 transition-colors",
               "focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900",
               "px-2 py-1"
@@ -189,7 +203,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
             type="button"
             onClick={() => setShowBriefModal(true)}
             aria-label="View client brief again"
-            className="font-body text-xs text-gray-400 hover:text-terminal-green transition-colors underline"
+            className="font-body text-sm text-gray-400 hover:text-terminal-green transition-colors underline"
           >
             View brief
           </button>
@@ -204,7 +218,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
             className="rounded-none border border-green-900/50 bg-slate-800"
           />
           <div className="text-right">
-            <h1 className="font-heading text-terminal-green text-[10px] sm:text-xs">
+            <h1 className="font-heading text-terminal-green text-sm">
               {scenario.contact_name}
             </h1>
             <p className="font-body text-gray-400 text-sm">
@@ -226,7 +240,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
       </div>
 
       {/* In-chat goal */}
-      <p className="px-4 py-1.5 text-center font-body text-xs text-gray-500 border-b border-green-900/20">
+      <p className="px-4 py-1.5 text-center font-body text-sm text-gray-500 border-b border-green-900/20">
         Goal: Uncover their real business problem
       </p>
 
@@ -288,7 +302,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
                     )}
                   >
                     <ReactMarkdown urlTransform={safeMarkdownLink}>
-                      {message.content}
+                      {getDisplayContentIfEndMeeting(message.content).displayContent}
                     </ReactMarkdown>
                   </div>
                 </>
@@ -338,7 +352,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
                   disabled={isLoading}
                   aria-label={errorUI.retryLabel}
                   className={cn(
-                    "font-heading text-xs text-terminal-green",
+                    "font-heading text-sm text-terminal-green",
                     "border border-terminal-green px-3 py-1.5",
                     "hover:bg-terminal-green hover:text-black transition-colors",
                     "disabled:opacity-50 disabled:cursor-not-allowed",
@@ -366,16 +380,31 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
       {/* Input Area or Session Ended */}
       {isSessionEnded ? (
         <div className="px-4 py-6 border-t border-green-900 bg-slate-900/50 text-center">
-          <p className="font-body text-yellow-400 text-lg mb-2">
-            ⏰ Time&apos;s up! The client has another meeting.
-          </p>
-          <p className="font-body text-gray-400 text-sm mb-4">
-            You gathered {completionStatus.requiredObtained}/{completionStatus.requiredTotal} key details and asked {userMessageCount} questions.
-          </p>
+          {meetingEndedByConduct ? (
+            <>
+              <p className="font-body text-red-400 text-lg mb-2">
+                Meeting ended. The client has ended the meeting due to inappropriate conduct.
+              </p>
+              {finalMessageFromConduct ? (
+                <p className="font-body text-gray-300 text-sm mb-4 italic">
+                  &ldquo;{finalMessageFromConduct}&rdquo;
+                </p>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <p className="font-body text-yellow-400 text-lg mb-2">
+                ⏰ Time&apos;s up! The client has another meeting.
+              </p>
+              <p className="font-body text-gray-400 text-sm mb-4">
+                You gathered {completionStatus.requiredObtained}/{completionStatus.requiredTotal} key details and asked {userMessageCount} questions.
+              </p>
+            </>
+          )}
           <button
             onClick={onBack}
             className={cn(
-              "font-heading text-xs text-terminal-green",
+              "font-heading text-sm text-terminal-green",
               "border-2 border-terminal-green px-4 py-2",
               "hover:bg-terminal-green hover:text-black transition-colors",
               "focus-visible:ring-2 focus-visible:ring-green-400"
@@ -391,7 +420,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
         >
           {/* Last-question nudge */}
           {isLastQuestion ? (
-            <p className="font-body text-xs text-amber-400 text-center mb-1" role="status">
+            <p className="font-body text-sm text-amber-400 text-center mb-1" role="status">
               Last question — make it count!
             </p>
           ) : null}
@@ -408,7 +437,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
                     inputRef.current?.focus();
                   }}
                   className={cn(
-                    "font-body text-xs px-3 py-1.5 rounded-sm",
+                    "font-body text-sm px-3 py-1.5 rounded-sm",
                     "border border-green-700/50 text-gray-400 hover:text-terminal-green hover:border-green-600",
                     "transition-colors focus-visible:ring-2 focus-visible:ring-green-400"
                   )}
@@ -448,7 +477,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
               disabled={isLoading || !input.trim()}
               aria-label="Send message"
               className={cn(
-                "font-heading text-xs text-terminal-green shrink-0",
+                "font-heading text-sm text-terminal-green shrink-0",
                 "px-3 py-1 border border-terminal-green",
                 "hover:bg-terminal-green hover:text-black transition-colors",
                 "disabled:opacity-50 disabled:cursor-not-allowed",
@@ -462,7 +491,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
             <div
               id="char-count"
               className={cn(
-                "font-body text-xs text-right pr-12",
+                "font-body text-sm text-right pr-12",
                 input.length >= CHAT_LIMITS.MAX_MESSAGE_LENGTH
                   ? "text-amber-400"
                   : input.length >= CHAT_LIMITS.MAX_MESSAGE_LENGTH - 100
@@ -517,7 +546,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
               className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-none border-2 border-green-700 bg-slate-900 p-6 shadow-xl"
             >
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-heading text-terminal-green text-xs">CLIENT BRIEF</h2>
+                <h2 className="font-heading text-terminal-green text-sm">CLIENT BRIEF</h2>
                 <button
                   type="button"
                   onClick={() => setShowBriefModal(false)}
@@ -554,7 +583,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
                 type="button"
                 onClick={() => setShowBriefModal(false)}
                 className={cn(
-                  "mt-4 w-full font-heading text-xs text-terminal-green",
+                  "mt-4 w-full font-heading text-sm text-terminal-green",
                   "border border-terminal-green px-4 py-2",
                   "hover:bg-terminal-green hover:text-black transition-colors",
                   "focus-visible:ring-2 focus-visible:ring-green-400"

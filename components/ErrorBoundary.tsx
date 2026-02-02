@@ -55,7 +55,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <button
                 onClick={this.handleReset}
                 className={cn(
-                  "font-heading text-xs text-terminal-green",
+                  "font-heading text-sm text-terminal-green",
                   "border-2 border-terminal-green px-4 py-2",
                   "hover:bg-terminal-green hover:text-black transition-colors",
                   "focus-visible:ring-2 focus-visible:ring-green-400"
@@ -66,7 +66,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <button
                 onClick={() => window.location.reload()}
                 className={cn(
-                  "font-heading text-xs text-gray-400",
+                  "font-heading text-sm text-gray-400",
                   "border-2 border-gray-600 px-4 py-2",
                   "hover:bg-gray-600 hover:text-white transition-colors",
                   "focus-visible:ring-2 focus-visible:ring-gray-400"

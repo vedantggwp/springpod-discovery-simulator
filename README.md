@@ -67,7 +67,7 @@ Each scenario has hidden requirements that students must discover through effect
 
 ### Security & robustness
 - **Rate limiting** - 20 requests/min per client on the chat API (429 when exceeded)
-- **Input limits** - 500 characters per message, max 50 messages per request; safe URLs for images and markdown links
+- **Input limits** - 500 characters per user message (assistant messages not limited), max 50 messages per request; safe URLs for images and markdown links
 - **Security headers** - X-Frame-Options, X-Content-Type-Options, Referrer-Policy
 - **Smart errors** - User-facing messages for rate limit, message too long, invalid scenario, and service unavailable; retry without full reload
 
@@ -110,7 +110,8 @@ Each scenario has hidden requirements that students must discover through effect
 │   ├── ChatRoom.tsx         # Chat interface
 │   ├── DetailsTracker.tsx   # Progress tracking
 │   ├── HintPanel.tsx        # Consultant hints
-│   ├── LedBanner.tsx        # Beta banner
+│   ├── WhatsNewBanner.tsx   # Version / what's new (Lobby top strip)
+│   ├── LedBanner.tsx        # LED-style banner (retained for reuse)
 │   └── ErrorBoundary.tsx    # Error handling
 ├── lib/
 │   ├── scenarios.ts        # Scenario fetch + definitions
@@ -124,6 +125,9 @@ Each scenario has hidden requirements that students must discover through effect
 ├── docs/
 │   ├── UNIFIED-IMPLEMENTATION-PLAN.md  # Implementation order & version roadmap
 │   ├── FEATURE-MAP.md      # Product spec, API reference, integration
+│   ├── PLAN.md             # Current plan
+│   ├── VERSIONING.md       # Versioning policy & release checklist
+│   ├── plans/              # Design notes (chat-history, prompt-engineering, etc.)
 │   └── archive/            # Historical plans (PLAN, RECOMMENDATIONS, V1.2)
 ├── CHANGELOG.md            # Version history
 └── .env.example            # Environment template

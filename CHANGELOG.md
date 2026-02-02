@@ -9,7 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-*No unreleased changes. All work is recorded under a version heading below.*
+### Changed
+- **Prompt infrastructure (diagnosis follow-up)** – Per [docs/plans/2026-02-02-prompt-infrastructure-diagnosis.md](docs/plans/2026-02-02-prompt-infrastructure-diagnosis.md):
+  - **Critical block first:** `CRITICAL_SYSTEM_PREFIX` is now prepended *before* the scenario prompt so the model sees role and constraints first. API builds `fullSystemPrompt = CRITICAL_SYSTEM_PREFIX + scenario + SYSTEM_PROMPT_RULES`.
+  - **Consultant conduct:** When the consultant is rude, unprofessional, off-topic, or uses improper language, the AI client is instructed to respond as a real client would—brief, professional pushback or redirect; stay in character; don’t escalate. Added in both CRITICAL_SYSTEM_PREFIX and SYSTEM_PROMPT_RULES (CONSULTANT CONDUCT section).
+  - **Explicit role framing:** “You are the client. The other party is the consultant.” in CRITICAL_SYSTEM_PREFIX and CONTEXT.
+  - **Few-shot examples:** Two example exchanges (vague question → short answer; specific question → slightly longer answer) in CRITICAL_SYSTEM_PREFIX to anchor length and dialogue-only style.
+  - **Separator for rules:** SYSTEM_PROMPT_RULES now starts with `---` and “CRITICAL BEHAVIOR (apply to every reply)” so the block after the scenario is clearly non-negotiable.
+  - **Scenario personality tightening:** Seed and fallback prompts: “Gets excited about…” → “Cares about… / Values…; convey that through your words and tone only, not by describing actions.” “Get excited if…” → “Respond positively if… (through your words and tone only).” Reduces conflict with dialogue-only rule.
+- **Database re-seeded:** `node scripts/seed-scenarios.mjs` run so production uses updated scenario text (Kindrell, Panther, IDM).
+- **End meeting due to conduct:** When the consultant is so inappropriate that the AI client would end the meeting in real life, the client now emulates ending the meeting: the model replies with only `[END_MEETING]Your final sentence.[/END_MEETING]`; the UI detects this, shows "Meeting ended. The client has ended the meeting due to inappropriate conduct." and the final message, and disables input (same session-end flow as turn limit). Prompt instructions in CRITICAL_SYSTEM_PREFIX and SYSTEM_PROMPT_RULES; client uses `getDisplayContentIfEndMeeting` and `END_MEETING_REGEX` from `lib/constants.ts`.
+
+### Added
+- **CRITICAL_SYSTEM_PREFIX** (`lib/constants.ts`) – Short block prepended before scenario: role, consultant conduct, dialogue-only, 2–4 sentences, two few-shot examples.
+- **Constants tests** – CRITICAL_SYSTEM_PREFIX (role, consultant conduct, dialogue only, few-shot); SYSTEM_PROMPT_RULES (separator, CONSULTANT CONDUCT); END_MEETING_REGEX and getDisplayContentIfEndMeeting.
+- **END_MEETING_REGEX** and **getDisplayContentIfEndMeeting** (`lib/constants.ts`) – convention-based detection of meeting-ended-by-conduct; client strips tags and shows final message.
 
 For **planned** work and version roadmap, see [docs/UNIFIED-IMPLEMENTATION-PLAN.md](docs/UNIFIED-IMPLEMENTATION-PLAN.md) and [docs/FEATURE-MAP.md](docs/FEATURE-MAP.md).
 
@@ -276,11 +290,3 @@ For **planned** work and version roadmap, see [docs/UNIFIED-IMPLEMENTATION-PLAN.
 - Framer Motion for animations
 - react-markdown for message rendering
 - `maxDuration = 30` for Vercel timeout prevention
-
----
-
-## [Unreleased]
-
-*No unreleased changes. All work is recorded under a version heading above.*
-
-For **planned** work and version roadmap, see [docs/UNIFIED-IMPLEMENTATION-PLAN.md](docs/UNIFIED-IMPLEMENTATION-PLAN.md) and [docs/FEATURE-MAP.md](docs/FEATURE-MAP.md).

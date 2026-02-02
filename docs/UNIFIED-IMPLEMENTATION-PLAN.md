@@ -9,7 +9,7 @@
 
 ---
 
-## 1. Current state (as of 2026-02-01)
+## 1. Current state (as of 2026-02-02)
 
 ### 1.1 Already shipped (CHANGELOG + codebase)
 
@@ -19,38 +19,20 @@
 | **v1.1.0** | Consultant tools | PLAN.md, FEATURE-MAP | ✓ Shipped (hints, details tracker, LED banner, error boundary) |
 | **v1.2.0** | Informed consultant | V1.2-IMPLEMENTATION-PLAN | ✓ Shipped (briefs, Supabase, ClientBrief, logos/photos, Haiku+fallback) |
 | **v1.2.1–1.2.3** | Fixes | CHANGELOG | ✓ Shipped (Supabase lazy init, DB fallback, null-safety, etc.) |
+| **v1.2.4** | Security + UX | RECOMMENDATIONS-PLAN, FEATURE-MAP | ✓ Shipped (rate limiting, input validation, smart errors, character count, session summary, View brief, etc.) |
+| **v1.2.5** | Lobby orientation + tests | CHANGELOG | ✓ Shipped (WhatsNewBanner, orientation block, Vitest, chat history design note) |
+| **v1.2.6** | Fixes + prompt engineering | CHANGELOG | ✓ Shipped (banner overlap, message length per user only, SYSTEM_PROMPT_RULES, fallback prompts) |
 
-### 1.2 Done but not yet in CHANGELOG (to release as v1.2.4)
+### 1.2 Lobby orientation (shipped in v1.2.5)
 
-These match **RECOMMENDATIONS-PLAN** (security) and **expert UX** work; document in CHANGELOG as v1.2.4.
+**Files:** `lib/constants.ts` (APP_RELEASE), `components/WhatsNewBanner.tsx`, `components/Lobby.tsx`. `LedBanner` retained for reuse elsewhere. Top banner = "What's new" strip; orientation block; Beta in footer.
 
-| Area | What was done | Maps to |
-|------|----------------|--------|
-| **Security** | Rate limiting (in-memory 20/min), message cap 500 chars, max 50 messages/request, safe image/markdown URLs, hardened API errors, security headers, scenarioId validation, Content-Type check, RLS docs in schema | RECOMMENDATIONS-PLAN §1.1 (rate limit); FEATURE-MAP “Security & Testing”; audit |
-| **UX – Errors** | Smart error messages from API body, retry via `reload()` (no full reload), `keepLastMessageOnError` | RECOMMENDATIONS-PLAN “actionable next step”; PLAN.md error display |
-| **UX – Input** | Character count (x/500), focus after send, shared `CHAT_LIMITS` | PLAN.md input; FEATURE-MAP “Progress Tracking” |
-| **UX – Goals** | In-chat goal line, session end summary (X/4 details, N questions), last-question nudge (“1 left”) | FEATURE-MAP “Session End”, “Progress Tracking” |
-| **UX – Discovery** | First-message starter prompts, “View brief” modal in chat, uncovered-detail feedback toast | FEATURE-MAP “Discovery Interview”; V1.2 “View Brief” |
-
-**Action:** Add a **v1.2.4** entry to CHANGELOG summarizing the above (security + UX). No new implementation required.
-
-### 1.3 Also implemented: Lobby orientation (Approach D)
-
-| Area | What was done |
-|------|----------------|
-| **Top banner** | Replaced beta marquee with “What’s new” strip: version, last updated date, one-line summary (from `lib/constants.ts` APP_RELEASE). |
-| **Lobby orientation** | “What you can do” block: pick client → read brief → discovery chat; use details tracker, hints, View brief. |
-| **Beta** | Moved to Lobby footer: “Springpod Discovery Simulator · Beta”. |
-
-**Files:** `lib/constants.ts` (APP_RELEASE), `components/WhatsNewBanner.tsx`, `components/Lobby.tsx`. `LedBanner` retained for reuse elsewhere.
-
----
 
 ## 2. Version roadmap (single timeline)
 
 | Version | Theme | Goal | Batches |
 |---------|--------|------|--------|
-| **v1.2.4** | Release current work | Changelog + tag for security + UX already merged | Changelog only |
+| **v1.2.6** | Current | Latest released (banner fix, message length, prompt engineering) | — |
 | **v1.3.0** | Quality & resilience | Lint, tests, perceived performance, optional persistence | Batches A + B |
 | **v1.4.0** | Performance & polish | Image optimization, production rate limiting | Batch C |
 | **v1.5.0** | Production ready | Auth, analytics, export | Future |
@@ -160,28 +142,24 @@ These match **RECOMMENDATIONS-PLAN** (security) and **expert UX** work; document
 
 ## 5. Implementation order (fast ship, no breakage)
 
-1. **Tag v1.2.4**  
-   - Update CHANGELOG with security + UX items from §1.2.  
-   - No code changes.
-
-2. **v1.3.0 – Batch A**  
+1. **v1.3.0 – Batch A**
    - Implement A1–A4 (ESLint, tests, skeleton, hint copy).  
    - Run lint, tests, build; then merge.
 
-3. **v1.3.0 – Batch B**  
+2. **v1.3.0 – Batch B**  
    - Implement B1 (session persistence) on top of Batch A.  
    - Test: refresh, expiry, Exit.  
    - Ship as v1.3.0.
 
-4. **v1.4.0 – Batch C**  
+3. **v1.4.0 – Batch C**  
    - Implement C1 (Next/Image) and C2 (Upstash rate limit with fallback).  
    - Test: avatars, rate limit with/without Upstash.  
    - Ship as v1.4.0.
 
-5. **v1.3.1 or v1.5.0 – Batch D (optional)**  
+4. **v1.3.1 or v1.5.0 – Batch D (optional)**  
    - Implement D1–D2 (session + message persistence to Supabase); optional D3 (“My history” list). See [docs/plans/2026-02-02-chat-history.md](plans/2026-02-02-chat-history.md).
 
-6. **v1.5.0**  
+5. **v1.5.0**  
    - Plan when needed; follow FEATURE-MAP + RECOMMENDATIONS-PLAN for auth, export, analytics.
 
 ---

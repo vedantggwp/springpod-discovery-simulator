@@ -128,8 +128,8 @@ Students develop these professional skills:
 │  ┌─────────────────────────────────────────────────────────────────┐    │
 │  │                        EXTERNAL SERVICES                         │    │
 │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │    │
-│  │  │  OpenRouter │  │  DiceBear   │  │   Upstash Redis         │  │    │
-│  │  │  (AI Model) │  │  (Avatars)  │  │   (Rate Limiting)       │  │    │
+│  │  │  OpenRouter │  │  DiceBear   │  │   Rate limit (in-memory)│  │    │
+│  │  │  (AI Model) │  │  (Avatars)  │  │   (20/min; Upstash v1.4)│  │    │
 │  │  └─────────────┘  └─────────────┘  └─────────────────────────┘  │    │
 │  └─────────────────────────────────────────────────────────────────┘    │
 │                                                                          │
@@ -281,10 +281,11 @@ Students develop these professional skills:
 **Triggers:**
 - Turn limit reached (15 questions)
 - User clicks "Exit"
+- **Client ends meeting due to conduct** – When the consultant is so inappropriate (rude, unprofessional, off-topic, improper language) that the AI client would end the meeting in real life, the model replies with only `[END_MEETING]Your final sentence.[/END_MEETING]`; the UI detects this, shows "Meeting ended" and the final message, and disables input.
 - All required information gathered (optional early exit)
 
 **End State UI:**
-- Summary message
+- Summary message (turn limit: "Time's up"; conduct: "Meeting ended due to inappropriate conduct" + final message)
 - "Interview another client" button
 - Return to lobby
 
@@ -314,21 +315,9 @@ interface Scenario {
 
 **System Prompt Design:**
 
-```
-You are [Name], [Role] at [Company].
-
-Problem: [Core challenge they face]
-Hidden Root Cause: [What student must discover]
-Goal: [What student should realize/propose]
-Tone: [How to communicate]
-
-Important guidelines:
-- Stay in character throughout
-- Don't reveal solution directly
-- Give hints when asked good questions
-- Be realistic about constraints
-- Express emotions naturally
-```
+- **Order:** API sends `CRITICAL_SYSTEM_PREFIX` (role, consultant conduct, dialogue-only, few-shot) first, then scenario prompt, then `SYSTEM_PROMPT_RULES` (separator + CONTEXT, CONSULTANT CONDUCT, RESPONSE STYLE, DIALOGUE ONLY, OUTPUT FORMAT, DO NOT).
+- **Role:** You are the client; the consultant is asking questions. If they are rude, unprofessional, off-topic, or use improper language, respond as a real client would (brief pushback/redirect). If their behavior would make you end the meeting in real life, reply with only `[END_MEETING]Your final sentence.[/END_MEETING]`; the UI then ends the session.
+- **Scenario structure:** You are [Name], [Role] at [Company]. Problem / Hidden root cause / Goal / Tone. Stay in character; don’t reveal solution directly; show emotion through words and tone only, not by describing actions or expressions.
 
 **Best Practices:**
 - Keep prompts under 500 tokens
@@ -655,8 +644,11 @@ git push origin main
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `OPENROUTER_API_KEY` | Yes | AI provider API key |
-| `UPSTASH_REDIS_REST_URL` | For v1.2+ | Rate limiting |
-| `UPSTASH_REDIS_REST_TOKEN` | For v1.2+ | Rate limiting |
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes | Supabase anon key |
+| `SUPABASE_SECRET_KEY` | Yes | Supabase service role (server-side) |
+| `UPSTASH_REDIS_REST_URL` | For v1.4+ | Optional; production rate limiting (Batch C2) |
+| `UPSTASH_REDIS_REST_TOKEN` | For v1.4+ | Optional; production rate limiting (Batch C2) |
 
 ### Production Checklist
 
@@ -671,7 +663,7 @@ git push origin main
 
 ## Version Roadmap
 
-### Current: v1.2.4 (February 2026)
+### Current: v1.2.6 (February 2026)
 
 **Features:**
 - 3 client scenarios, rich briefs (ClientBrief), Supabase
@@ -787,7 +779,7 @@ data: {"type":"text","text":" Well, our current process..."}
 | 400 | "Invalid scenario" | Unknown scenarioId |
 | 400 | "Messages required" | Empty messages array |
 | 400 | "Invalid message format" | Missing role/content |
-| 400 | "Message too long" | Content > 2000 chars |
+| 400 | "Message too long" | User message > 500 chars (per user message only; assistant messages not limited) |
 | 429 | "Too many requests" | Rate limit exceeded |
 | 503 | "AI service not configured" | Missing API key |
 | 503 | "AI service unavailable" | Provider error |
@@ -820,4 +812,4 @@ MIT License - See LICENSE file for details.
 
 ---
 
-*Last updated: February 2, 2026 | Version: 1.2.4*
+*Last updated: February 2, 2026 | Version: 1.2.6*

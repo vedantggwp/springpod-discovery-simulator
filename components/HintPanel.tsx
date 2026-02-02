@@ -163,7 +163,7 @@ export function HintPanel({
 
         {/* Badge for new hints */}
         {visibleHints.length > 0 && !isExpanded ? (
-          <span className="w-5 h-5 flex items-center justify-center bg-yellow-500 text-black text-xs font-bold rounded-full">
+          <span className="w-5 h-5 flex items-center justify-center bg-yellow-500 text-black text-sm font-bold rounded-full">
             {visibleHints.length}
           </span>
         ) : null}
@@ -189,7 +189,7 @@ export function HintPanel({
             className="overflow-hidden"
           >
             <div className="mt-2 p-3 bg-slate-900/60 border border-yellow-900/30 rounded-sm">
-              <h3 className="font-heading text-[10px] text-yellow-400 mb-3">
+              <h3 className="font-heading text-sm text-yellow-400 mb-3">
                 HINTS
               </h3>
 
@@ -218,7 +218,7 @@ export function HintPanel({
                           ✕
                         </button>
                       </div>
-                      <span className="mt-2 inline-block font-body text-xs text-gray-600 capitalize">
+                      <span className="mt-2 inline-block font-body text-sm text-gray-600 capitalize">
                         {item.hint.category}
                       </span>
                     </motion.li>

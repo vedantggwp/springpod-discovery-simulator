@@ -55,6 +55,23 @@ When you are ready to tag a new version (e.g. `v1.2.6`):
    - `git tag vX.Y.Z`
    - `git push origin vX.Y.Z` (and push the commit if needed)
 
+7. **Docs sync** – Update docs so they match the released state (see [Docs sync checklist](#docs-sync-checklist) below).
+
+---
+
+## Docs sync checklist
+
+**When to use:** Before pushing/merging any change that affects version, API, architecture, or project structure; and always when releasing.
+
+- [ ] **README** – Project Structure lists all current components (no missing or obsolete entries).
+- [ ] **FEATURE-MAP** – "Current" version and footer match `lib/constants.ts` `APP_RELEASE.VERSION`.
+- [ ] **FEATURE-MAP** – Appendix B (API reference) matches actual limits and error messages (e.g. message length, status codes).
+- [ ] **FEATURE-MAP** – Architecture diagram and Environment Variables table describe **current** implementation (e.g. in-memory rate limit vs Upstash; only list env vars that are used today).
+- [ ] **UNIFIED-IMPLEMENTATION-PLAN** – "Current state" does not say "to release as vX.Y.Z" for a version already in CHANGELOG; remove or update that wording after release.
+- [ ] **CHANGELOG** – Exactly one `## [Unreleased]` section at the top; no duplicate at the bottom.
+
+See also `.cursor/rules/docs-sync.mdc` for the rule that reminds the AI to keep docs in sync.
+
 ---
 
 ## Where roadmap lives
