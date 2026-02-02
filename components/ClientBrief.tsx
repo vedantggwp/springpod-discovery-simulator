@@ -32,11 +32,8 @@ function TypewriterText({
     return () => clearTimeout(t);
   }, [text.length, delayMs, skip, visibleLength]);
 
-  useEffect(() => {
-    if (skip) setVisibleLength(text.length);
-  }, [skip, text]);
-
-  return <span>{text.slice(0, visibleLength)}</span>;
+  const effectiveLength = skip ? text.length : visibleLength;
+  return <span>{text.slice(0, effectiveLength)}</span>;
 }
 
 export function ClientBrief({ scenario, onStartMeeting, onBack }: ClientBriefProps) {

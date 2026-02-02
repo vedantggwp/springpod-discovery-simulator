@@ -23,6 +23,8 @@
 | **v1.2.5** | Lobby orientation + tests | CHANGELOG | ✓ Shipped (WhatsNewBanner, orientation block, Vitest, chat history design note) |
 | **v1.2.6** | Fixes + prompt engineering | CHANGELOG | ✓ Shipped (banner overlap, message length per user only, SYSTEM_PROMPT_RULES, fallback prompts) |
 | **v1.2.7** | Space-Grade polish + typography | CHANGELOG | ✓ Shipped (Geist Mono/Sans, proportional type scale, UI suggestions, corner brackets, LED dots, skeleton loaders, modal Escape) |
+| **v1.3.0** | Quality & resilience | Batches A + B | ✓ Shipped (ESLint 9 flat config, loading skeleton, session persistence, hint copy, lint fixes) |
+| **v1.4.0** | Performance & production | Batch C | ✓ Shipped (avatar img fix, Upstash rate limiting optional) |
 
 ### 1.2 Lobby orientation (shipped in v1.2.5)
 
@@ -33,9 +35,7 @@
 
 | Version | Theme | Goal | Batches |
 |---------|--------|------|--------|
-| **v1.2.7** | Current | Latest released (Space-Grade polish, Geist typography, type scale, UI suggestions) | — |
-| **v1.3.0** | Quality & resilience | Lint, tests, perceived performance, optional persistence | Batches A + B |
-| **v1.4.0** | Performance & polish | Image optimization, production rate limiting | Batch C |
+| **v1.4.0** | Current | Latest released (v1.3 + v1.4: ESLint, skeleton, session persistence, avatar fix, Upstash optional) | — |
 | **v1.5.0** | Production ready | Auth, analytics, export | Future |
 
 ---

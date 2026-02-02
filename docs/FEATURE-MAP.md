@@ -663,16 +663,17 @@ git push origin main
 
 ## Version Roadmap
 
-### Current: v1.2.7 (February 2026)
+### Current: v1.4.0 (February 2026)
 
 **Features:**
 - 3 client scenarios, rich briefs (ClientBrief), Supabase
 - AI-powered conversations (Claude Haiku + fallback)
 - Progress tracking (Details Tracker), hint system
 - What's new banner + Lobby orientation (Approach D); Beta in footer
-- Security: rate limiting, input validation, safe URLs, headers
-- UX: smart errors, retry, character count, session summary, first-message starters, View brief in chat
+- Security: rate limiting (in-memory; Upstash Redis optional), input validation, safe URLs, headers
+- UX: smart errors, retry, character count, session summary, first-message starters, View brief in chat; session persistence (Resume?); loading skeleton; hint empty-state copy
 - Error boundary, web layout fix
+- ESLint 9 flat config; avatar images via `<img>` (DiceBear SVGs)
 
 **For implementation order and batching,** see [UNIFIED-IMPLEMENTATION-PLAN.md](UNIFIED-IMPLEMENTATION-PLAN.md).
 
@@ -693,7 +694,7 @@ git push origin main
 ### Planned: v1.4.0 - Performance & production
 
 **Goals:**
-- Next/Image for avatars; Upstash rate limiting (production)
+- Avatar images via `<img>` (DiceBear SVGs; next/image does not support external SVGs); Upstash rate limiting (production)
 
 ### Planned: Chat history (structured)
 
@@ -722,29 +723,33 @@ client-AI-chat-bot/
 │   │       └── route.ts       # AI chat endpoint
 │   ├── globals.css            # Global styles
 │   ├── layout.tsx             # Root layout
+│   ├── loading.tsx            # Route-level loading UI (skeleton cards)
 │   └── page.tsx               # Main page
 ├── components/
 │   ├── SpaceBackground.tsx    # Dynamic space background (nebula + starfield)
 │   ├── ChatRoom.tsx           # Chat interface
 │   ├── ClientBrief.tsx        # Pre-chat brief view
-│   ├── DetailsTracker.tsx    # Progress tracking UI
-│   ├── ErrorBoundary.tsx     # Error handling
-│   ├── HintPanel.tsx         # Hints UI
-│   ├── LedBanner.tsx         # LED-style banner (retained)
-│   ├── Lobby.tsx             # Scenario selection + orientation
+│   ├── DetailsTracker.tsx     # Progress tracking UI
+│   ├── ErrorBoundary.tsx      # Error handling
+│   ├── HintPanel.tsx          # Hints UI
+│   ├── LedBanner.tsx          # LED-style banner (retained)
+│   ├── Lobby.tsx              # Scenario selection + orientation
+│   ├── Skeleton.tsx           # Loading skeleton (Skeleton, SkeletonCard)
 │   └── WhatsNewBanner.tsx    # Version / what's new top banner
 ├── lib/
 │   ├── constants.ts           # CHAT_LIMITS, APP_RELEASE
-│   ├── detailsTracker.ts     # Completion logic
-│   ├── scenarios.ts          # Scenario definitions
+│   ├── detailsTracker.ts      # Completion logic
+│   ├── scenarios.ts           # Scenario definitions
+│   ├── sessionStorage.ts      # Chat session persistence (localStorage, 30 min expiry)
 │   ├── types/
 │   │   └── database.ts        # DB types
-│   └── utils.ts              # Utilities
+│   └── utils.ts               # Utilities
 ├── docs/
 │   ├── FEATURE-MAP.md         # This file
 │   ├── PLAN.md                # Architecture docs
 │   └── RECOMMENDATIONS-PLAN.md # Improvement plan
 ├── CHANGELOG.md               # Version history
+├── eslint.config.mjs          # ESLint 9 flat config (next/core-web-vitals)
 ├── README.md                  # Quick start
 ├── package.json
 ├── tailwind.config.ts
@@ -813,4 +818,4 @@ MIT License - See LICENSE file for details.
 
 ---
 
-*Last updated: February 2, 2026 | Version: 1.2.7*
+*Last updated: February 2, 2026 | Version: 1.4.0*

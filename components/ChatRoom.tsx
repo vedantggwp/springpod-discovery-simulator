@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { useChat } from "ai/react";
+import type { Message } from "ai";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { getContactPhotoUrl } from "@/lib/scenarios";
 import { getCompletionStatus, getNewlyObtainedDetails } from "@/lib/detailsTracker";
+import { setSession, clearSession } from "@/lib/sessionStorage";
 import { cn, safeImageUrl, safeMarkdownLink } from "@/lib/utils";
 import { CHAT_LIMITS, getDisplayContentIfEndMeeting } from "@/lib/constants";
 import { AI_CONFIG } from "@/lib/ai-config";
@@ -76,12 +78,20 @@ function getErrorMessage(error: Error | undefined): {
   };
 }
 
+const OPENING_MESSAGE = (openingLine: string): Message => ({
+  id: "opening",
+  role: "assistant",
+  content: openingLine,
+});
+
 interface ChatRoomProps {
   scenario: ScenarioV2;
   onBack: () => void;
+  /** Restored messages from localStorage (Resume flow). */
+  restoredMessages?: Message[] | null;
 }
 
-export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
+export function ChatRoom({ scenario, onBack, restoredMessages }: ChatRoomProps) {
   const prefersReducedMotion = useReducedMotion();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -89,17 +99,25 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
   const [lastUserMessageTime, setLastUserMessageTime] = useState<number | null>(null);
   const [showBriefModal, setShowBriefModal] = useState(false);
   const [uncoveredLabel, setUncoveredLabel] = useState<string | null>(null);
-  const [meetingEndedByConduct, setMeetingEndedByConduct] = useState(false);
-  const [finalMessageFromConduct, setFinalMessageFromConduct] = useState<string | null>(null);
   const prevCompletionStatusRef = useRef<ReturnType<typeof getCompletionStatus> | null>(null);
 
   const MAX_TURNS = scenario.max_turns || 15;
+
+  const initialMessages = useMemo(() => {
+    if (restoredMessages && restoredMessages.length > 0) return restoredMessages;
+    return [OPENING_MESSAGE(scenario.opening_line)];
+  }, [restoredMessages, scenario.opening_line]);
 
   // Contact photo URL - sanitize DB value (https only) or fallback to DiceBear
   const contactPhotoUrl = useMemo(() => {
     const safe = safeImageUrl(scenario.contact_photo_url);
     return safe ?? getContactPhotoUrl(scenario.avatarSeed);
   }, [scenario.contact_photo_url, scenario.avatarSeed]);
+
+  const handleBack = useCallback(() => {
+    clearSession();
+    onBack();
+  }, [onBack]);
 
   const {
     messages,
@@ -110,19 +128,28 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
     error,
     reload,
   } = useChat({
+    id: `session-${scenario.id}`,
     api: "/api/chat",
     body: { scenarioId: scenario.id },
-    initialMessages: [
-      {
-        id: "opening",
-        role: "assistant",
-        content: scenario.opening_line,
-      },
-    ],
+    initialMessages,
     keepLastMessageOnError: true,
   });
 
+  // Persist session to localStorage (30 min expiry handled in sessionStorage)
+  useEffect(() => {
+    setSession(scenario.id, messages);
+  }, [scenario.id, messages]);
+
   const errorUI = useMemo(() => getErrorMessage(error), [error]);
+
+  // Detect [END_MEETING]...[/END_MEETING] in latest assistant message (client ended meeting due to conduct) — derived in render
+  const conductResult = useMemo(() => {
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== "assistant" || typeof last.content !== "string") return null;
+    return getDisplayContentIfEndMeeting(last.content);
+  }, [messages]);
+  const meetingEndedByConduct = conductResult?.meetingEnded ?? false;
+  const finalMessageFromConduct = conductResult?.finalMessage ?? null;
 
   // Calculate turns and session end (turn limit or client ended meeting due to conduct)
   const userMessageCount = messages.filter((m) => m.role === "user").length;
@@ -146,27 +173,15 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
     }
   }, [completionStatus]);
 
-  // Track last user message time for time-based hints
+  // Track last user message time for time-based hints (defer setState to avoid sync setState in effect)
   const prevUserMessageCountRef = useRef(0);
   useEffect(() => {
     const currentUserCount = messages.filter((m) => m.role === "user").length;
     if (currentUserCount > prevUserMessageCountRef.current) {
-      setLastUserMessageTime(Date.now());
       prevUserMessageCountRef.current = currentUserCount;
+      queueMicrotask(() => setLastUserMessageTime(Date.now()));
     }
   }, [messages]);
-
-  // Detect [END_MEETING]...[/END_MEETING] in latest assistant message (client ended meeting due to conduct)
-  useEffect(() => {
-    if (meetingEndedByConduct || isLoading) return;
-    const last = messages[messages.length - 1];
-    if (!last || last.role !== "assistant" || typeof last.content !== "string") return;
-    const { meetingEnded, finalMessage } = getDisplayContentIfEndMeeting(last.content);
-    if (meetingEnded) {
-      setMeetingEndedByConduct(true);
-      setFinalMessageFromConduct(finalMessage);
-    }
-  }, [messages, isLoading, meetingEndedByConduct]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -207,7 +222,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
       <header className="glass-card flex items-center justify-between px-4 py-3 border-b border-white/10">
         <div className="flex items-center gap-2">
           <button
-            onClick={onBack}
+            onClick={handleBack}
             aria-label="Exit interview and return to client selection"
             className={cn(
               "font-heading text-springpod-green text-sm",
@@ -236,6 +251,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
               "hover:border-springpod-green hover:shadow-neon-green focus-visible:ring-2 focus-visible:ring-springpod-green focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
             )}
           >
+            {/* img: DiceBear/Supabase avatars; next/image does not support external SVGs */}
             <img
               src={contactPhotoUrl}
               alt=""
@@ -338,7 +354,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
                     width={32}
                     height={32}
                     className="rounded-lg shrink-0 self-start mt-1 border border-white/10"
-                    aria-hidden="true"
+                    aria-hidden
                   />
                   <div
                     className={cn(
@@ -376,7 +392,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
               width={32}
               height={32}
               className="rounded-lg border border-white/10"
-              aria-hidden="true"
+              aria-hidden
             />
             <span className="font-body text-stellar-cyan text-base animate-pulse" role="status">
               Neural Link: Processing
@@ -409,7 +425,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
                 </button>
               ) : null}
               <button
-                onClick={onBack}
+                onClick={handleBack}
                 aria-label="Back to client selection"
                 className="font-body text-springpod-green underline hover:text-green-300"
               >
@@ -448,7 +464,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
             </>
           )}
           <button
-            onClick={onBack}
+            onClick={handleBack}
             className={cn(
               "font-heading text-sm text-springpod-green",
               "border-2 border-springpod-green shadow-green-glow px-4 py-2",

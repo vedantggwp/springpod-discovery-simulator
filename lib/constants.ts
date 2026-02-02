@@ -81,7 +81,7 @@ export function getDisplayContentIfEndMeeting(content: string): {
 
 /** App version and release info for banner and footer. Update when releasing. */
 export const APP_RELEASE = {
-  VERSION: "1.2.7",
+  VERSION: "1.4.0",
   LAST_UPDATED: "2 Feb 2026",
-  WHATS_NEW_SUMMARY: "Space-Grade polish: Geist typography, proportional type scale, corner brackets, LED difficulty dots, UI suggestions (skip link, skeleton loaders, modal Escape).",
+  WHATS_NEW_SUMMARY: "Quality & resilience: ESLint 9 flat config, loading skeleton, session persistence (Resume?), hint copy. Performance: avatar fix, Upstash rate limiting optional.",
 } as const;

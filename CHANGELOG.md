@@ -13,6 +13,23 @@ _No unreleased changes._
 
 ---
 
+## [1.4.0] - 2026-02-02
+
+### Added (v1.3.0 – Quality & resilience)
+- **ESLint 9 flat config** – `eslint.config.mjs` using `eslint-config-next/core-web-vitals`; `npm run lint` runs ESLint directly (no `next lint`). Ignores `.next/`, `node_modules/`, config files, `scripts/`, `vitest.setup.ts`.
+- **Loading skeleton** – Reusable `Skeleton` and `SkeletonCard` (`components/Skeleton.tsx`); route-level `app/loading.tsx` shows skeleton cards while page loads; Lobby uses `SkeletonCard` when scenarios are loading.
+- **Session persistence (localStorage)** – Chat session is saved to localStorage with 30-minute expiry. On returning to the lobby, a “Resume?” banner offers to restore the in-progress conversation; Dismiss clears the stored session. Exit/Back clears session. `lib/sessionStorage.ts` provides `getSession`, `setSession`, `clearSession`; ChatRoom uses stable `useChat` id and persists messages on change; page passes `restoredMessages` when resuming.
+
+### Changed (v1.3.0)
+- **Hint panel empty state** – When no hints are triggered yet, copy now explains when hints appear (client mentions topics, after a short pause, or “Show me a hint”).
+- **Lint fixes** – Resolved `react-hooks/set-state-in-effect` in ChatRoom (deferred setState for lastUserMessageTime; conduct result derived in render), ClientBrief (effectiveLength from skip), SpaceBackground (deferred initial matchMedia setState).
+
+### Added (v1.4.0 – Performance & production)
+- **Avatar images** – Contact photos in ChatRoom (header, messages, typing indicator) and ClientBrief use `<img>` (DiceBear returns SVG; `next/image` does not support external SVGs). `next.config.ts` keeps `images.remotePatterns` for future non-SVG assets.
+- **Upstash rate limiting (production)** – When `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are set, the chat API uses `@upstash/ratelimit` + `@upstash/redis` (sliding window 20/min). When unset, in-memory rate limiting is used so local/dev works without Redis. `.env.example` documents optional Upstash vars.
+
+---
+
 ## [1.2.7] - 2026-02-02
 
 ### Changed

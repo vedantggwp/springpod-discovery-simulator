@@ -238,7 +238,7 @@ export function HintPanel({
                 </ul>
               ) : (
                 <p className="font-body text-sm text-gray-500">
-                  No hints triggered yet. Keep asking questions!
+                  No hints triggered yet. Hints appear when the client mentions certain topics, after a short pause, or when you click &quot;Show me a hint&quot; below. Keep asking questions!
                 </p>
               )}
 

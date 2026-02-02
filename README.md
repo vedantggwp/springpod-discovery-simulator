@@ -2,7 +2,7 @@
 
 An interactive training tool where students practice interviewing virtual clients to uncover business requirements. Features a Space-Grade Mission Control aesthetic (glassmorphism, parallax space background) and AI-powered conversations.
 
-**Version:** 1.2.7
+**Version:** 1.4.0
 
 ## Overview
 
@@ -66,12 +66,13 @@ Each scenario has hidden requirements that students must discover through effect
 - **Progress Tracking** - Details tracker and hint panel per scenario
 
 ### Security & robustness
-- **Rate limiting** - 20 requests/min per client on the chat API (429 when exceeded)
+- **Rate limiting** – 20 requests/min per client on the chat API (429 when exceeded); in-memory by default, optional Upstash Redis for production
 - **Input limits** - 500 characters per user message (assistant messages not limited), max 50 messages per request; safe URLs for images and markdown links
 - **Security headers** - X-Frame-Options, X-Content-Type-Options, Referrer-Policy
 - **Smart errors** - User-facing messages for rate limit, message too long, invalid scenario, and service unavailable; retry without full reload
 
 ### User experience
+- **Session persistence** – Chat survives refresh (localStorage, 30 min); “Resume?” banner when returning to lobby
 - **Space-Grade Mission Control theme** – Glassmorphism cards, deep space background with mouse-reactive nebula and parallax stars, Geist Mono/Sans typography (proportional type scale), corner brackets and LED difficulty dots on Lobby cards, rocket-inspired interactions (launch button, orbital avatars, Mission Clock), fuel-gauge progress bars
 - **Markdown support** - AI responses render with proper formatting
 - **Auto-scroll** - Chat automatically follows new messages
@@ -104,14 +105,16 @@ Each scenario has hidden requirements that students must discover through effect
 │   ├── api/chat/route.ts    # AI streaming endpoint
 │   ├── globals.css          # Global styles + reduced motion
 │   ├── layout.tsx           # Root layout with fonts
+│   ├── loading.tsx          # Route-level loading UI (skeleton cards)
 │   └── page.tsx             # Main page with state
 ├── components/
-│   ├── SpaceBackground.tsx   # Dynamic space background (nebula + starfield)
+│   ├── SpaceBackground.tsx  # Dynamic space background (nebula + starfield)
 │   ├── Lobby.tsx            # Client engagement selection
 │   ├── ClientBrief.tsx      # Pre-meeting brief
 │   ├── ChatRoom.tsx         # Chat interface
 │   ├── DetailsTracker.tsx   # Progress tracking
 │   ├── HintPanel.tsx        # Consultant hints
+│   ├── Skeleton.tsx         # Loading skeleton (Skeleton, SkeletonCard)
 │   ├── WhatsNewBanner.tsx   # Version / what's new (Lobby top strip)
 │   ├── LedBanner.tsx        # LED-style banner (retained for reuse)
 │   └── ErrorBoundary.tsx    # Error handling
@@ -120,7 +123,8 @@ Each scenario has hidden requirements that students must discover through effect
 │   ├── supabase.ts         # Supabase clients
 │   ├── ai-config.ts        # AI model config
 │   ├── constants.ts        # Chat limits (message length, max messages)
-│   ├── rate-limit.ts       # In-memory rate limiter for API
+│   ├── rate-limit.ts       # Rate limiter (in-memory; Upstash Redis optional)
+│   ├── sessionStorage.ts   # Chat session persistence (localStorage, 30 min)
 │   ├── detailsTracker.ts   # Completion logic
 │   ├── utils.ts            # Helpers (cn, safeImageUrl, safeMarkdownLink)
 │   └── types/database.ts   # DB types
@@ -132,6 +136,7 @@ Each scenario has hidden requirements that students must discover through effect
 │   ├── plans/              # Design notes (chat-history, prompt-engineering, etc.)
 │   └── archive/            # Historical plans (PLAN, RECOMMENDATIONS, V1.2)
 ├── CHANGELOG.md            # Version history
+├── eslint.config.mjs       # ESLint 9 flat config (next/core-web-vitals)
 └── .env.example            # Environment template
 ```
 
@@ -161,6 +166,8 @@ Ensure your platform supports:
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes | Supabase anon/publishable key |
 | `SUPABASE_SECRET_KEY` | Yes | Supabase service role key (server-side) |
+| `UPSTASH_REDIS_REST_URL` | No | Upstash Redis URL (optional; enables production rate limiting across instances) |
+| `UPSTASH_REDIS_REST_TOKEN` | No | Upstash Redis token (optional; when unset, in-memory rate limiting is used) |
 
 ### Customization
 

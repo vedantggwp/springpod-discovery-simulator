@@ -34,9 +34,9 @@ export async function POST(req: Request) {
       return new Response("AI service not configured", { status: 503 });
     }
 
-    // Rate limit by client identifier
+    // Rate limit by client identifier (Upstash when env set, else in-memory)
     const clientId = getClientIdentifier(req);
-    const { ok: rateOk, retryAfterMs } = checkRateLimit(clientId);
+    const { ok: rateOk, retryAfterMs } = await checkRateLimit(clientId);
     if (!rateOk) {
       return new Response("Too Many Requests", {
         status: 429,

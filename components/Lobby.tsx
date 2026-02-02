@@ -3,6 +3,7 @@
 import { memo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { SkeletonCard } from "./Skeleton";
 import { WhatsNewBanner } from "./WhatsNewBanner";
 import type { ScenarioV2 } from "@/lib/scenarios";
 
@@ -188,22 +189,7 @@ export function Lobby({ scenarios, onSelect, isLoading }: LobbyProps) {
       {isLoading && (
         <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-6 py-4" aria-live="polite" aria-busy="true">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="glass-card rounded-lg p-6 flex flex-col gap-4 animate-pulse"
-              aria-hidden="true"
-            >
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-white/10 mx-auto" />
-              <div className="h-5 bg-white/10 rounded w-3/4 mx-auto" />
-              <div className="h-4 bg-white/10 rounded w-full" />
-              <div className="h-4 bg-white/10 rounded w-1/2 mx-auto" />
-              <div className="flex justify-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-white/10" />
-                <div className="w-2 h-2 rounded-full bg-white/10" />
-                <div className="w-2 h-2 rounded-full bg-white/10" />
-              </div>
-              <div className="h-10 bg-white/10 rounded mt-auto" />
-            </div>
+            <SkeletonCard key={i} />
           ))}
         </div>
       )}

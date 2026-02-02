@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import type { Message } from "ai";
 import { Lobby } from "@/components/Lobby";
 import { ClientBrief } from "@/components/ClientBrief";
 import { ChatRoom } from "@/components/ChatRoom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { fetchAllScenarios, type ScenarioV2 } from "@/lib/scenarios";
+import { getSession, clearSession, type StoredSession } from "@/lib/sessionStorage";
 
 type ViewState = "lobby" | "brief" | "chat";
 
@@ -16,6 +18,8 @@ export default function Home() {
   const [selectedScenario, setSelectedScenario] = useState<ScenarioV2 | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pendingResumeSession, setPendingResumeSession] = useState<StoredSession | null>(null);
+  const [restoredMessagesForChat, setRestoredMessagesForChat] = useState<Message[] | null>(null);
   const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
@@ -35,6 +39,13 @@ export default function Home() {
     loadScenarios();
   }, []);
 
+  // After scenarios load, check for a valid stored session (30 min expiry)
+  useEffect(() => {
+    if (isLoading || scenarios.length === 0) return;
+    const session = getSession();
+    if (session) setPendingResumeSession(session);
+  }, [isLoading, scenarios.length]);
+
   const handleSelectScenario = (scenarioId: string) => {
     const scenario = scenarios.find((s) => s.id === scenarioId);
     if (scenario) {
@@ -44,12 +55,30 @@ export default function Home() {
   };
 
   const handleStartMeeting = () => {
+    setRestoredMessagesForChat(null);
     setView("chat");
   };
 
   const handleBackToLobby = () => {
     setSelectedScenario(null);
+    setRestoredMessagesForChat(null);
     setView("lobby");
+  };
+
+  const handleResumeSession = () => {
+    if (!pendingResumeSession) return;
+    const scenario = scenarios.find((s) => s.id === pendingResumeSession.scenarioId);
+    if (scenario) {
+      setSelectedScenario(scenario);
+      setRestoredMessagesForChat(pendingResumeSession.messages);
+      setPendingResumeSession(null);
+      setView("chat");
+    }
+  };
+
+  const handleDismissResume = () => {
+    clearSession();
+    setPendingResumeSession(null);
   };
 
   if (error) {
@@ -84,7 +113,11 @@ export default function Home() {
             transition={transitionProps}
             className="w-full h-full"
           >
-            <ChatRoom scenario={selectedScenario} onBack={handleBackToLobby} />
+            <ChatRoom
+              scenario={selectedScenario}
+              onBack={handleBackToLobby}
+              restoredMessages={restoredMessagesForChat ?? undefined}
+            />
           </motion.div>
         ) : view === "brief" && selectedScenario ? (
           <motion.div
@@ -108,13 +141,42 @@ export default function Home() {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             transition={transitionProps}
-            className="w-full h-full"
+            className="w-full h-full flex flex-col"
           >
-            <Lobby
-              scenarios={scenarios}
-              onSelect={handleSelectScenario}
-              isLoading={isLoading}
-            />
+            {pendingResumeSession && scenarios.length > 0 ? (() => {
+              const resumeScenario = scenarios.find((s) => s.id === pendingResumeSession.scenarioId);
+              if (!resumeScenario) return null;
+              return (
+                <div className="flex-shrink-0 px-4 py-3 bg-springpod-green/10 border-b border-springpod-green/30 flex flex-wrap items-center justify-center gap-3">
+                  <span className="font-body text-sm text-gray-300">
+                    You have an in-progress chat with <strong className="text-springpod-green">{resumeScenario.company_name}</strong>. Resume?
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleResumeSession}
+                      className="font-heading text-xs uppercase tracking-widest text-springpod-green border-2 border-springpod-green px-3 py-1.5 hover:bg-springpod-green hover:text-black transition-colors focus-visible:ring-2 focus-visible:ring-springpod-green"
+                    >
+                      Resume
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDismissResume}
+                      className="font-body text-sm text-gray-400 hover:text-gray-200 underline focus-visible:ring-2 focus-visible:ring-springpod-green"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              );
+            })() : null}
+            <div className="flex-1 min-h-0">
+              <Lobby
+                scenarios={scenarios}
+                onSelect={handleSelectScenario}
+                isLoading={isLoading}
+              />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
