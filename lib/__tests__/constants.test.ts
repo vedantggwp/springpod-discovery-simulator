@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { CHAT_LIMITS, APP_RELEASE } from "../constants";
+import { CHAT_LIMITS, APP_RELEASE, SYSTEM_PROMPT_RULES } from "../constants";
 
 describe("CHAT_LIMITS", () => {
   it("has MAX_MESSAGE_LENGTH of 500", () => {
@@ -28,5 +28,27 @@ describe("APP_RELEASE", () => {
     expect(APP_RELEASE.WHATS_NEW_SUMMARY).toBeDefined();
     expect(typeof APP_RELEASE.WHATS_NEW_SUMMARY).toBe("string");
     expect(APP_RELEASE.WHATS_NEW_SUMMARY.length).toBeGreaterThan(0);
+  });
+});
+
+describe("SYSTEM_PROMPT_RULES", () => {
+  it("includes discovery-interview context", () => {
+    expect(SYSTEM_PROMPT_RULES).toMatch(/discovery interview|reveal.*when they ask/i);
+  });
+
+  it("includes concise response guidance", () => {
+    expect(SYSTEM_PROMPT_RULES).toMatch(/concise|2–4 sentences/i);
+  });
+
+  it("forbids action/expression descriptions", () => {
+    expect(SYSTEM_PROMPT_RULES).toMatch(/Never describe actions|sighs|shakes head|dialogue only|direct dialogue/i);
+  });
+
+  it("specifies output format (spoken words only)", () => {
+    expect(SYSTEM_PROMPT_RULES).toMatch(/spoken words only|only the character|no prefix|no stage directions/i);
+  });
+
+  it("includes Do not section", () => {
+    expect(SYSTEM_PROMPT_RULES).toMatch(/DO NOT|Do not|bullet points|fourth wall/i);
   });
 });

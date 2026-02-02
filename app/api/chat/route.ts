@@ -2,7 +2,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { streamText, type CoreMessage } from "ai";
 import { createServerClient } from "@/lib/supabase";
 import { AI_CONFIG } from "@/lib/ai-config";
-import { CHAT_LIMITS } from "@/lib/constants";
+import { CHAT_LIMITS, SYSTEM_PROMPT_RULES } from "@/lib/constants";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { scenarios, type ScenarioId } from "@/lib/scenarios";
 
@@ -74,7 +74,8 @@ export async function POST(req: Request) {
       if (!msg || typeof msg !== "object" || !msg.role || !msg.content || typeof msg.content !== "string") {
         return new Response("Invalid message format", { status: 400 });
       }
-      if (msg.content.length > maxLen) {
+      // Only enforce length limit on user messages; assistant/system may be long (e.g. AI response)
+      if (msg.role === "user" && msg.content.length > maxLen) {
         return new Response(`Message too long (max ${maxLen} characters)`, { status: 400 });
       }
     }
@@ -108,12 +109,14 @@ export async function POST(req: Request) {
       systemPrompt = fallback.systemPrompt;
     }
 
+    const fullSystemPrompt = systemPrompt + SYSTEM_PROMPT_RULES;
+
     await new Promise((resolve) => setTimeout(resolve, AI_CONFIG.thinkingDelayMs));
 
     try {
       const result = await streamText({
         model: openrouter(AI_CONFIG.primary.model),
-        system: systemPrompt,
+        system: fullSystemPrompt,
         messages: messages as CoreMessage[],
         maxTokens: AI_CONFIG.primary.maxTokens,
       });
@@ -125,8 +128,8 @@ export async function POST(req: Request) {
       try {
         const result = await streamText({
           model: openrouter(AI_CONFIG.fallback.model),
-          system: systemPrompt,
-messages: messages as CoreMessage[],
+          system: fullSystemPrompt,
+          messages: messages as CoreMessage[],
         maxTokens: AI_CONFIG.fallback.maxTokens,
         });
         return result.toDataStreamResponse();

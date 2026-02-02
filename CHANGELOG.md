@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- **Lobby banner overlap** – Increased top padding so the WhatsNewBanner no longer covers the "SELECT A CLIENT ENGAGEMENT" heading (`pt-28 sm:pt-24` instead of `pt-14`). The banner can wrap to multiple lines; content now starts below it.
+- **Chat message length limit** – Limit is now applied **per user message** only, not to the whole conversation.
+  - **Previous (broken):** API rejected the request if *any* message in the history (including long AI replies) exceeded 500 characters. After the client sent one long response, the next user question failed with "Message too long" because the *entire* payload was validated.
+  - **Intended experience:** Each *user* message (the question you type) is capped at 500 characters to keep questions focused. *Assistant* messages (AI/client responses) may be any length. You can always send a follow-up question up to 500 chars.
+  - **Change:** API now enforces `MAX_MESSAGE_LENGTH` only for messages with `role === 'user'`. Assistant and system messages are not length-limited. Client input already limited the current message only; no client change needed.
+  - Design note: [docs/plans/2026-02-02-chat-message-length.md](docs/plans/2026-02-02-chat-message-length.md)
+
+### Changed
+- **AI client system prompts** – Shared rules appended to every scenario prompt (API):
+  - **Concise responses:** Keep answers to 2–4 sentences normally; only give longer answers when the consultant asks a specific, detailed question. Do not fill the page.
+  - **Dialogue only:** Never describe actions, expressions, or body language (no *sighs*, *shakes head*, *nods*, *pauses*, *shrugs*, etc.). Speak only as the character in direct dialogue; no stage directions.
+  - Implemented via `lib/constants.ts` `SYSTEM_PROMPT_RULES`; API appends to DB or fallback prompt before calling the model.
+- **Prompt engineering improvements** (per [docs/plans/2026-02-02-prompt-engineering-analysis.md](docs/plans/2026-02-02-prompt-engineering-analysis.md)):
+  - **SYSTEM_PROMPT_RULES:** Added CONTEXT (discovery interview, reveal when they ask the right questions); OUTPUT FORMAT (reply = only character’s spoken words, no prefix or narration); DO NOT (no bullet points/markdown, no fourth wall); defined “longer” (max 1–2 short paragraphs, never wall of text); short sentences preferred; “show emotion through words and tone only.”
+  - **Fallback prompts (lib/scenarios.ts):** Kindrell aligned with seed structure and “words and tone” wording; Panther and IDM expanded from one-liners to full BACKGROUND / CHALLENGE / PERSONALITY / GUIDELINES so behavior matches seed when DB is unavailable.
+  - **Seed (scripts/seed-scenarios.mjs):** Kindrell “Show frustration naturally” → “Show frustration through your words and tone, not through describing actions or expressions”; Marco and Emma personality lines updated to “show it through your words and tone, not by describing actions.”
+
+---
+
 ## [1.2.5] - 2026-02-02
 
 ### Added
