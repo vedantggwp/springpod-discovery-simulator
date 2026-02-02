@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { useChat } from "ai/react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
@@ -43,7 +43,7 @@ function getErrorMessage(error: Error | undefined): {
   }
   if (m.includes("Message too long") || m.includes("500 characters")) {
     return {
-      message: "Message is too long (max 500 characters). Shorten it and try again.",
+      message: "Please shorten your message to 500 characters.",
       canRetry: false,
       retryLabel: "Back to lobby",
     };
@@ -85,6 +85,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
   const prefersReducedMotion = useReducedMotion();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const briefModalTriggerRef = useRef<HTMLButtonElement>(null);
   const [lastUserMessageTime, setLastUserMessageTime] = useState<number | null>(null);
   const [showBriefModal, setShowBriefModal] = useState(false);
   const [uncoveredLabel, setUncoveredLabel] = useState<string | null>(null);
@@ -174,6 +175,23 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
     });
   }, [messages, prefersReducedMotion]);
 
+  // Brief modal: Escape to close and restore focus to trigger
+  const closeBriefModal = useCallback(() => {
+    setShowBriefModal(false);
+    requestAnimationFrame(() => briefModalTriggerRef.current?.focus());
+  }, []);
+  useEffect(() => {
+    if (!showBriefModal) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeBriefModal();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [showBriefModal, closeBriefModal]);
+
   const handleSubmitWithFocus = (e?: React.FormEvent) => {
     handleSubmit(e);
     requestAnimationFrame(() => inputRef.current?.focus());
@@ -204,9 +222,12 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
 
         <div className="flex items-center gap-3">
           <motion.button
+            ref={briefModalTriggerRef}
             type="button"
             onClick={() => setShowBriefModal(true)}
             aria-label="View client brief again"
+            aria-haspopup="dialog"
+            aria-expanded={showBriefModal}
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.98 }}
             className={cn(
@@ -231,7 +252,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
             )}
           </motion.button>
           <div className="text-right">
-            <h1 className="font-heading text-springpod-green text-springpod-glow text-sm">
+            <h1 className="font-heading text-springpod-green text-springpod-glow text-xl">
               {scenario.contact_name}
             </h1>
             {isLoading ? (
@@ -323,7 +344,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
                     className={cn(
                       "max-w-[80%] prose prose-invert prose-sm font-body glass-card",
                       "rounded-lg border border-white/10 px-3 py-2",
-                      "text-springpod-green text-lg leading-relaxed"
+                      "text-springpod-green text-base leading-relaxed"
                     )}
                   >
                     <ReactMarkdown urlTransform={safeMarkdownLink}>
@@ -333,7 +354,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
                 </>
               ) : (
                 <div className="max-w-[80%] glass-card px-4 py-2 rounded-lg border border-white/10">
-                  <p className="font-body text-stellar-cyan text-lg leading-relaxed">
+                  <p className="font-body text-stellar-cyan text-base leading-relaxed">
                     {message.content}
                   </p>
                 </div>
@@ -342,7 +363,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
           );
         })}
 
-        {/* Typing Indicator (Neural Link) */}
+        {/* Typing Indicator (Neural Link): subtle pulse so it's clear system is working */}
         {isLoading ? (
           <motion.div
             initial={prefersReducedMotion ? false : { opacity: 0 }}
@@ -357,7 +378,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
               className="rounded-lg border border-white/10"
               aria-hidden="true"
             />
-            <span className="font-body text-stellar-cyan text-lg" role="status">
+            <span className="font-body text-stellar-cyan text-base animate-pulse" role="status">
               Neural Link: Processing
               <span className="animate-blink">…</span>
             </span>
@@ -367,7 +388,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
         {/* Error Display */}
         {error ? (
           <div className="flex flex-col items-center justify-center gap-3 py-4 px-4 text-center">
-            <span className="font-body text-red-400 text-lg">
+            <span className="font-body text-red-400 text-base">
               {errorUI.message}
             </span>
             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -407,7 +428,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
         <div className="px-4 py-6 border-t border-white/10 glass-card text-center">
           {meetingEndedByConduct ? (
             <>
-              <p className="font-body text-red-400 text-lg mb-2">
+              <p className="font-body text-red-400 text-base mb-2">
                 Meeting ended. The client has ended the meeting due to inappropriate conduct.
               </p>
               {finalMessageFromConduct ? (
@@ -418,7 +439,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
             </>
           ) : (
             <>
-              <p className="font-body text-yellow-400 text-lg mb-2">
+              <p className="font-body text-yellow-400 text-base mb-2">
                 ⏰ Time&apos;s up! The client has another meeting.
               </p>
               <p className="font-body text-gray-400 text-sm mb-4">
@@ -475,7 +496,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
 
           <div className="flex items-center gap-2">
             <span
-              className="font-body text-springpod-green text-2xl shrink-0"
+              className="font-body text-springpod-green text-xl shrink-0"
               aria-hidden="true"
             >
               &gt;
@@ -492,7 +513,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
               aria-describedby={input.length > 0 ? "char-count" : undefined}
               className={cn(
                 "flex-1 bg-transparent border-none outline-none min-w-0",
-                "font-body text-lg text-white placeholder:text-gray-600",
+                "font-body text-base text-white placeholder:text-gray-600",
                 "focus-visible:ring-0",
                 "disabled:opacity-50 disabled:cursor-not-allowed"
               )}
@@ -560,7 +581,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
         </div>
       ) : null}
 
-      {/* View brief modal */}
+      {/* View brief modal: Escape to close, focus returns to trigger */}
       <AnimatePresence>
         {showBriefModal ? (
           <motion.div
@@ -568,7 +589,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
-            onClick={() => setShowBriefModal(false)}
+            onClick={closeBriefModal}
             role="dialog"
             aria-modal="true"
             aria-label="Client brief summary"
@@ -581,19 +602,19 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
               className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-lg glass-card border border-white/10 p-6"
             >
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-heading text-springpod-green text-springpod-glow text-sm">CLIENT BRIEF</h2>
+                <h2 className="font-heading text-springpod-green text-springpod-glow text-lg">CLIENT BRIEF</h2>
                 <button
                   type="button"
-                  onClick={() => setShowBriefModal(false)}
+                  onClick={closeBriefModal}
                   aria-label="Close brief"
-                  className="font-body text-gray-400 hover:text-white text-lg"
+                  className="font-body text-gray-400 hover:text-white text-base focus-visible:ring-2 focus-visible:ring-springpod-green focus-visible:ring-offset-2 rounded"
                 >
                   ✕
                 </button>
               </div>
-              <h3 className="font-heading text-springpod-green text-sm mb-2">{scenario.company_name}</h3>
+              <h3 className="font-heading text-springpod-green text-base mb-2">{scenario.company_name}</h3>
               {scenario.company_why_contacted ? (
-                <p className="font-body text-gray-300 text-sm italic border-l-2 border-stellar-cyan pl-3 mb-3">
+                <p className="font-body text-gray-300 text-base italic border-l-2 border-stellar-cyan pl-3 mb-3">
                   {scenario.company_why_contacted}
                 </p>
               ) : null}
@@ -616,7 +637,7 @@ export function ChatRoom({ scenario, onBack }: ChatRoomProps) {
               </div>
               <button
                 type="button"
-                onClick={() => setShowBriefModal(false)}
+                onClick={closeBriefModal}
                 className={cn(
                   "mt-4 w-full font-heading text-sm text-springpod-green",
                   "border border-springpod-green shadow-green-glow px-4 py-2",

@@ -40,10 +40,10 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="min-h-screen flex flex-col items-center justify-center p-8">
           <div className="max-w-md text-center glass-card border border-white/10 rounded-lg p-6">
-            <h1 className="font-heading text-springpod-green text-springpod-glow text-sm mb-4">
+            <h1 className="font-heading text-springpod-green text-springpod-glow text-xl mb-4">
               SYSTEM ERROR
             </h1>
-            <p className="font-body text-red-400 text-lg mb-6">
+            <p className="font-body text-red-400 text-base mb-6">
               Something went wrong. The application encountered an unexpected error.
             </p>
             {this.state.error && (

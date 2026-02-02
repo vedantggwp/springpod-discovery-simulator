@@ -81,7 +81,7 @@ export function getDisplayContentIfEndMeeting(content: string): {
 
 /** App version and release info for banner and footer. Update when releasing. */
 export const APP_RELEASE = {
-  VERSION: "1.2.6",
+  VERSION: "1.2.7",
   LAST_UPDATED: "2 Feb 2026",
-  WHATS_NEW_SUMMARY: "Banner overlap fix, message length per user only, prompt engineering (concise, dialogue-only, fallback prompts).",
+  WHATS_NEW_SUMMARY: "Space-Grade polish: Geist typography, proportional type scale, corner brackets, LED difficulty dots, UI suggestions (skip link, skeleton loaders, modal Escape).",
 } as const;

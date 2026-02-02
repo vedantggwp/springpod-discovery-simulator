@@ -9,16 +9,21 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        heading: ["var(--font-sans)", "sans-serif"],
-        body: ["var(--font-sans)", "sans-serif"],
+        heading: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
+        body: ["var(--font-geist-sans)", "sans-serif"],
       },
-      // Typography: +2px across scale for better readability
+      textShadow: {
+        "green-glow": "0 0 10px rgba(34, 197, 94, 0.3)",
+      },
+      /* Typography: proportional scale by function (~1.2 ratio)
+       * Display 2xl | H1 xl | H2 lg | Body base | Caption sm | Overline xs */
       fontSize: {
-        xs: ["0.875rem", { lineHeight: "1.25rem" }],
-        sm: ["1rem", { lineHeight: "1.5rem" }],
-        base: ["1.125rem", { lineHeight: "1.75rem" }],
-        lg: ["1.25rem", { lineHeight: "1.75rem" }],
-        xl: ["1.375rem", { lineHeight: "1.75rem" }],
+        xs: ["0.75rem", { lineHeight: "1rem" }],
+        sm: ["0.875rem", { lineHeight: "1.25rem" }],
+        base: ["1rem", { lineHeight: "1.5rem" }],
+        lg: ["1.125rem", { lineHeight: "1.5rem" }],
+        xl: ["1.25rem", { lineHeight: "1.5rem" }],
+        "2xl": ["1.5rem", { lineHeight: "1.5rem" }],
       },
       colors: {
         "terminal-green": "#22c55e",

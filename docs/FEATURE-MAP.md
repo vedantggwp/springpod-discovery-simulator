@@ -663,7 +663,7 @@ git push origin main
 
 ## Version Roadmap
 
-### Current: v1.2.6 (February 2026)
+### Current: v1.2.7 (February 2026)
 
 **Features:**
 - 3 client scenarios, rich briefs (ClientBrief), Supabase
@@ -813,4 +813,4 @@ MIT License - See LICENSE file for details.
 
 ---
 
-*Last updated: February 2, 2026 | Version: 1.2.6*
+*Last updated: February 2, 2026 | Version: 1.2.7*

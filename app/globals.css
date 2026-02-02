@@ -2,11 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Space-Grade Mission Control: deep space gradient */
+/* Space-Grade Mission Control: black-dominant, no white on scroll */
 @layer base {
+  html {
+    background: #000000;
+    min-height: 100%;
+  }
   body {
-    background: linear-gradient(to bottom, #020617, #0f172a);
-    min-height: 100vh;
+    background: linear-gradient(to bottom, #020617, #000000);
+    min-height: 100%;
     position: relative;
   }
 }
@@ -19,8 +23,13 @@
 
   .text-springpod-glow {
     text-shadow:
+      0 0 10px rgba(34, 197, 94, 0.3),
       0 0 8px rgba(34, 197, 94, 0.5),
       0 0 16px rgba(34, 197, 94, 0.3);
+  }
+  /* All primary green text gets subtle glow */
+  .text-springpod-green {
+    text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
   }
 }
 
@@ -131,6 +140,15 @@
   color: #22c55e;
 }
 
+/* Lobby orientation list: visible bullets (not camouflaged with starfield) */
+.orientation-list {
+  list-style-type: disc;
+}
+.orientation-list li::marker {
+  color: #22c55e;
+  font-size: 1.25em;
+}
+
 /* LED Banner Styles (WhatsNewBanner / LedBanner) */
 .led-text {
   font-family: var(--font-heading), sans-serif;
@@ -184,4 +202,19 @@
     animation: none;
     box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
   }
+}
+
+/* VIEW BRIEF button: subtle LED flicker (hardware feel) */
+@keyframes led-flicker {
+  0%, 90%, 100% { opacity: 1; filter: brightness(1); }
+  92% { opacity: 0.95; filter: brightness(0.9); }
+  94% { opacity: 1; filter: brightness(1.05); }
+  96% { opacity: 0.98; filter: brightness(0.95); }
+  98% { opacity: 1; filter: brightness(1); }
+}
+.animate-led-flicker {
+  animation: led-flicker 3s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-led-flicker { animation: none; }
 }

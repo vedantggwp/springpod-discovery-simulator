@@ -66,7 +66,7 @@ export function ClientBrief({ scenario, onStartMeeting, onBack }: ClientBriefPro
         >
           ← Back to Companies
         </button>
-        <span className="font-heading text-springpod-green text-springpod-glow text-sm">
+        <span className="font-heading text-springpod-green text-springpod-glow text-lg">
           CLIENT BRIEF
         </span>
       </header>
@@ -81,12 +81,12 @@ export function ClientBrief({ scenario, onStartMeeting, onBack }: ClientBriefPro
         >
           <div className="flex items-center gap-4">
             <div className="glass-card w-16 h-16 border border-white/10 flex items-center justify-center shrink-0">
-              <span className="font-heading text-springpod-green text-lg">
+              <span className="font-heading text-springpod-green text-xl">
                 {scenario.company_name.charAt(0)}
               </span>
             </div>
             <div>
-              <h1 className="font-heading text-springpod-green text-springpod-glow text-base sm:text-lg mb-1">
+              <h1 className="font-heading text-springpod-green text-springpod-glow text-xl mb-1">
                 {scenario.company_name}
               </h1>
               {scenario.company_tagline ? (
@@ -100,13 +100,13 @@ export function ClientBrief({ scenario, onStartMeeting, onBack }: ClientBriefPro
           <div className="mt-4 flex gap-2">
             <span
               className={cn(
-                "px-2 py-1 text-base font-body border",
+                "px-2 py-1 text-sm font-body border",
                 difficultyColors[scenario.difficulty]
               )}
             >
               {scenario.difficulty.toUpperCase()}
             </span>
-            <span className="px-2 py-1 text-base font-body border border-terminal-slate text-gray-400">
+            <span className="px-2 py-1 text-sm font-body border border-terminal-slate text-gray-400">
               {scenario.company_industry ?? ""}
             </span>
           </div>
@@ -120,10 +120,10 @@ export function ClientBrief({ scenario, onStartMeeting, onBack }: ClientBriefPro
             transition={{ delay: 0.1 }}
             className="mb-6"
           >
-            <h2 className="font-heading text-springpod-green text-springpod-glow text-base mb-3 border-b border-springpod-green/30 pb-2">
+            <h2 className="font-heading text-springpod-green text-springpod-glow text-lg mb-3 border-b border-springpod-green/30 pb-2">
               WHY THEY CONTACTED US
             </h2>
-            <blockquote className="font-body text-lg text-gray-300 italic border-l-2 border-stellar-cyan pl-4">
+            <blockquote className="font-body text-base text-gray-300 italic border-l-2 border-stellar-cyan pl-4">
               <TypewriterText
                 text={scenario.company_why_contacted}
                 skip={!!prefersReducedMotion}
@@ -140,14 +140,14 @@ export function ClientBrief({ scenario, onStartMeeting, onBack }: ClientBriefPro
             transition={{ delay: 0.2 }}
             className="mb-6"
           >
-            <h2 className="font-heading text-springpod-green text-springpod-glow text-base mb-3 border-b border-springpod-green/30 pb-2">
+            <h2 className="font-heading text-springpod-green text-springpod-glow text-lg mb-3 border-b border-springpod-green/30 pb-2">
               WHAT YOU SHOULD KNOW
             </h2>
             <ul className="space-y-2">
               {(scenario.company_context ?? []).map((item, index) => (
                 <li key={index} className="flex items-start gap-2">
                   <span className="text-springpod-green mt-1">•</span>
-                  <span className="font-body text-gray-300 text-lg">{item}</span>
+                  <span className="font-body text-gray-300 text-base">{item}</span>
                 </li>
               ))}
             </ul>
@@ -162,7 +162,7 @@ export function ClientBrief({ scenario, onStartMeeting, onBack }: ClientBriefPro
             transition={{ delay: 0.3 }}
             className="mb-6"
           >
-            <h2 className="font-heading text-springpod-green text-springpod-glow text-base mb-3 border-b border-springpod-green/30 pb-2">
+            <h2 className="font-heading text-springpod-green text-springpod-glow text-lg mb-3 border-b border-springpod-green/30 pb-2">
               COMPANY BACKGROUND
             </h2>
             <p className="font-body text-gray-400 text-base leading-relaxed">
@@ -178,7 +178,7 @@ export function ClientBrief({ scenario, onStartMeeting, onBack }: ClientBriefPro
           transition={{ delay: 0.4 }}
           className="mb-8"
         >
-          <h2 className="font-heading text-springpod-green text-springpod-glow text-base mb-3 border-b border-springpod-green/30 pb-2">
+          <h2 className="font-heading text-springpod-green text-springpod-glow text-lg mb-3 border-b border-springpod-green/30 pb-2">
             YOUR MEETING
           </h2>
 
@@ -202,13 +202,13 @@ export function ClientBrief({ scenario, onStartMeeting, onBack }: ClientBriefPro
               </div>
 
               <div className="flex-1">
-                <h3 className="font-heading text-springpod-green text-springpod-glow text-base mb-1">
+                <h3 className="font-heading text-springpod-green text-springpod-glow text-lg mb-1">
                   {scenario.contact_name}
                 </h3>
                 <p className="font-body text-gray-300 text-base mb-2">
                   {scenario.contact_role}
                 </p>
-                <p className="font-body text-gray-500 text-base">
+                <p className="font-body text-gray-500 text-sm">
                   {scenario.contact_years_at_company != null
                     ? `${scenario.contact_years_at_company} years at ${scenario.company_name}`
                     : scenario.company_name}
@@ -221,7 +221,7 @@ export function ClientBrief({ scenario, onStartMeeting, onBack }: ClientBriefPro
 
             {scenario.contact_communication_style && (
               <div className="mt-4 pt-4 border-t border-springpod-green/30">
-                <p className="font-body text-base text-terminal-slate uppercase mb-2">
+                <p className="font-body text-sm text-terminal-slate uppercase mb-2">
                   Communication Style
                 </p>
                 <p className="font-body text-gray-400 text-base leading-relaxed">

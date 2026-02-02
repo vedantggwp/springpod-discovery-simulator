@@ -22,6 +22,7 @@
 | **v1.2.4** | Security + UX | RECOMMENDATIONS-PLAN, FEATURE-MAP | ✓ Shipped (rate limiting, input validation, smart errors, character count, session summary, View brief, etc.) |
 | **v1.2.5** | Lobby orientation + tests | CHANGELOG | ✓ Shipped (WhatsNewBanner, orientation block, Vitest, chat history design note) |
 | **v1.2.6** | Fixes + prompt engineering | CHANGELOG | ✓ Shipped (banner overlap, message length per user only, SYSTEM_PROMPT_RULES, fallback prompts) |
+| **v1.2.7** | Space-Grade polish + typography | CHANGELOG | ✓ Shipped (Geist Mono/Sans, proportional type scale, UI suggestions, corner brackets, LED dots, skeleton loaders, modal Escape) |
 
 ### 1.2 Lobby orientation (shipped in v1.2.5)
 
@@ -32,7 +33,7 @@
 
 | Version | Theme | Goal | Batches |
 |---------|--------|------|--------|
-| **v1.2.6** | Current | Latest released (banner fix, message length, prompt engineering) | — |
+| **v1.2.7** | Current | Latest released (Space-Grade polish, Geist typography, type scale, UI suggestions) | — |
 | **v1.3.0** | Quality & resilience | Lint, tests, perceived performance, optional persistence | Batches A + B |
 | **v1.4.0** | Performance & polish | Image optimization, production rate limiting | Batch C |
 | **v1.5.0** | Production ready | Auth, analytics, export | Future |

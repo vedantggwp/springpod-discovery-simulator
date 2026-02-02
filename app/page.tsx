@@ -56,7 +56,7 @@ export default function Home() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
-          <p className="font-body text-red-400 text-lg mb-4">{error}</p>
+          <p className="font-body text-red-400 text-base mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
             className="font-heading text-sm text-springpod-green border-2 border-springpod-green shadow-green-glow px-4 py-2 hover:bg-springpod-green hover:text-black transition-colors"

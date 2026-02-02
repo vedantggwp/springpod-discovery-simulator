@@ -9,14 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_No unreleased changes._
+
+---
+
+## [1.2.7] - 2026-02-02
+
 ### Changed
 - **UI rebrand: Space-Grade Mission Control** – Replaced cyber-noir/retro theme with a Space-Grade Mission Control aesthetic:
-  - **Background:** Deep space gradient (`linear-gradient(to bottom, #020617, #0f172a)`), mouse-reactive nebula (teal flashlight), and 3-layer parallax starfield via new `SpaceBackground` component. CRT scanlines removed.
-  - **Glassmorphism:** Cards and panels use shared `.glass-card` (backdrop-blur, bg-white/5, border-white/10) with neon green outline on hover (`hover:shadow-neon-green`). Applied to Lobby scenario cards, ClientBrief sections, ChatRoom, DetailsTracker, HintPanel, WhatsNewBanner, ErrorBoundary.
-  - **Typography:** Press_Start_2P and VT323 replaced with Inter (modern sans-serif). Tailwind `fontFamily` uses `--font-sans`.
-  - **Transitions:** Screen changes (Lobby → Brief → Chat) use hyperdrive zoom (scale 0.9→1, opacity) instead of slide.
-  - **Rocket-inspired touches:** Start Meeting button has exhaust glow on hover; primary contact avatars (ClientBrief “Your Meeting”, ChatRoom header) have an orbital glowing dot (CSS `animate-orbit` / `animate-orbit-sm`); Mission Clock (questions counter) restyled as [QUERIES 00/15] with pulse on count change; DetailsTracker progress bar has fuel-gauge shimmer (optional, respects reduced motion).
-  - **Palette:** Single metadata cyan token `stellar-cyan` (#0EA5E9); `data-cyan` removed. Neon shadow `neon-green` for hover states. All `data-cyan` usages updated to `stellar-cyan`.
+  - **Background:** Deep space gradient (#020617 → #000000), html background #000 (no white on scroll). SpaceBackground: parallax starfield (ratios 0.2 / 0.5 / 0.8), nebula blob (cyan/5) with high-delay mouse follow; reduced motion = single star layer. CRT scanlines removed.
+  - **Glassmorphism:** Shared `.glass-card`; Lobby cards use `backdrop-blur-xl bg-slate-900/40`, 10px L-shaped corner brackets (springpod-green, glow on hover). Applied to Lobby, ClientBrief, ChatRoom, DetailsTracker, HintPanel, WhatsNewBanner, ErrorBoundary.
+  - **Typography:** Geist Mono (headers/labels, uppercase tracking-widest) and Geist Sans (body, font-medium) via `geist` package. Green text-shadow on primary green. Proportional type scale (Display 2xl, H1 xl, H2 lg, Body base, Caption sm, Overline xs) per [typography audit](docs/plans/2026-02-02-typography-audit.md).
+  - **Transitions:** Hyperdrive zoom; card spring hover (Framer); VIEW BRIEF LED flicker animation.
+  - **Rocket-inspired:** Start Meeting exhaust glow; orbital dots on avatars; Mission Clock [QUERIES 00/15]; DetailsTracker fuel-gauge shimmer; Lobby difficulty dots as glowing green LEDs.
+  - **Palette:** stellar-cyan; neon shadow neon-green for hover/focus.
+- **UI polish ([docs/UI-Suggestions.md](docs/UI-Suggestions.md)):** Skip link, aria-live for loading; orientation bullets (green disc markers); footer/WhatsNewBanner contrast; VIEW BRIEF rest-state fill; skeleton loaders; empty state copy; brief modal Escape + focus return; Neural Link pulse; friendly error copy; SpaceBackground reduced-motion.
 - **Prompt infrastructure (diagnosis follow-up)** – Per [docs/plans/2026-02-02-prompt-infrastructure-diagnosis.md](docs/plans/2026-02-02-prompt-infrastructure-diagnosis.md):
   - **Critical block first:** `CRITICAL_SYSTEM_PREFIX` is now prepended *before* the scenario prompt so the model sees role and constraints first. API builds `fullSystemPrompt = CRITICAL_SYSTEM_PREFIX + scenario + SYSTEM_PROMPT_RULES`.
   - **Consultant conduct:** When the consultant is rude, unprofessional, off-topic, or uses improper language, the AI client is instructed to respond as a real client would—brief, professional pushback or redirect; stay in character; don’t escalate. Added in both CRITICAL_SYSTEM_PREFIX and SYSTEM_PROMPT_RULES (CONSULTANT CONDUCT section).
@@ -28,12 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **End meeting due to conduct:** When the consultant is so inappropriate that the AI client would end the meeting in real life, the client now emulates ending the meeting: the model replies with only `[END_MEETING]Your final sentence.[/END_MEETING]`; the UI detects this, shows "Meeting ended. The client has ended the meeting due to inappropriate conduct." and the final message, and disables input (same session-end flow as turn limit). Prompt instructions in CRITICAL_SYSTEM_PREFIX and SYSTEM_PROMPT_RULES; client uses `getDisplayContentIfEndMeeting` and `END_MEETING_REGEX` from `lib/constants.ts`.
 
 ### Added
-- **SpaceBackground** (`components/SpaceBackground.tsx`) – Client component for dynamic space background: mouse-follow nebula and 3 parallax star layers; respects `prefers-reduced-motion` (static when set).
-- **CRITICAL_SYSTEM_PREFIX** (`lib/constants.ts`) – Short block prepended before scenario: role, consultant conduct, dialogue-only, 2–4 sentences, two few-shot examples.
-- **Constants tests** – CRITICAL_SYSTEM_PREFIX (role, consultant conduct, dialogue only, few-shot); SYSTEM_PROMPT_RULES (separator, CONSULTANT CONDUCT); END_MEETING_REGEX and getDisplayContentIfEndMeeting.
-- **END_MEETING_REGEX** and **getDisplayContentIfEndMeeting** (`lib/constants.ts`) – convention-based detection of meeting-ended-by-conduct; client strips tags and shows final message.
+- **SpaceBackground** (`components/SpaceBackground.tsx`) – Mouse-follow nebula + parallax starfield; reduced motion support.
+- **CRITICAL_SYSTEM_PREFIX**, **END_MEETING_REGEX**, **getDisplayContentIfEndMeeting** (`lib/constants.ts`); constants tests.
+- **Typography audit** – [docs/plans/2026-02-02-typography-audit.md](docs/plans/2026-02-02-typography-audit.md) (scale, hierarchy, checklist).
 
-For **planned** work and version roadmap, see [docs/UNIFIED-IMPLEMENTATION-PLAN.md](docs/UNIFIED-IMPLEMENTATION-PLAN.md) and [docs/FEATURE-MAP.md](docs/FEATURE-MAP.md).
+For **planned** work, see [docs/UNIFIED-IMPLEMENTATION-PLAN.md](docs/UNIFIED-IMPLEMENTATION-PLAN.md) and [docs/FEATURE-MAP.md](docs/FEATURE-MAP.md).
 
 ---
 

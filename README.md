@@ -2,7 +2,7 @@
 
 An interactive training tool where students practice interviewing virtual clients to uncover business requirements. Features a Space-Grade Mission Control aesthetic (glassmorphism, parallax space background) and AI-powered conversations.
 
-**Version:** 1.2.6
+**Version:** 1.2.7
 
 ## Overview
 
@@ -72,7 +72,7 @@ Each scenario has hidden requirements that students must discover through effect
 - **Smart errors** - User-facing messages for rate limit, message too long, invalid scenario, and service unavailable; retry without full reload
 
 ### User experience
-- **Space-Grade Mission Control theme** – Glassmorphism cards, deep space background with mouse-reactive nebula and parallax stars, Inter typography, rocket-inspired interactions (launch button, orbital avatars, Mission Clock), fuel-gauge progress bars
+- **Space-Grade Mission Control theme** – Glassmorphism cards, deep space background with mouse-reactive nebula and parallax stars, Geist Mono/Sans typography (proportional type scale), corner brackets and LED difficulty dots on Lobby cards, rocket-inspired interactions (launch button, orbital avatars, Mission Clock), fuel-gauge progress bars
 - **Markdown support** - AI responses render with proper formatting
 - **Auto-scroll** - Chat automatically follows new messages
 - **Mobile responsive** - Works on phones and tablets
@@ -89,6 +89,7 @@ Each scenario has hidden requirements that students must discover through effect
 | Technology | Purpose |
 |------------|---------|
 | Next.js 16+ | React framework with App Router |
+| Geist (geist) | Geist Mono (headings) + Geist Sans (body) |
 | Tailwind CSS | Styling with custom theme |
 | Vercel AI SDK | Streaming AI responses |
 | OpenRouter | AI model access (Claude 3 Haiku / 3.5 Sonnet) |
