@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { cn, safeImageUrl } from "@/lib/utils";
 import { getContactPhotoUrl } from "@/lib/scenarios";
 import type { ScenarioV2 } from "@/lib/scenarios";
 
@@ -12,7 +12,8 @@ interface ClientBriefProps {
 }
 
 export function ClientBrief({ scenario, onStartMeeting, onBack }: ClientBriefProps) {
-  const contactPhotoUrl = scenario.contact_photo_url || getContactPhotoUrl(scenario.avatarSeed);
+  const safeUrl = safeImageUrl(scenario.contact_photo_url);
+  const contactPhotoUrl = safeUrl ?? getContactPhotoUrl(scenario.avatarSeed);
 
   // Difficulty badge colors
   const difficultyColors = {

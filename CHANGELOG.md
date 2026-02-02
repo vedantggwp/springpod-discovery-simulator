@@ -26,6 +26,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.4] - 2026-02-01
+
+### Security
+- **Rate limiting** – In-memory 20 req/min per client on `/api/chat`; 429 + Retry-After when exceeded.
+- **Input validation** – Message length cap 500 chars (shared client/server); max 50 messages per request; scenarioId format validated (alphanumeric, hyphen, underscore, 1–64 chars).
+- **Safe URLs** – `contact_photo_url` and markdown links restricted to http(s); `safeImageUrl` / `safeMarkdownLink` in utils.
+- **API hardening** – Content-Type must be application/json (415); no rethrow of errors (generic 503); minimal logging in production.
+- **Security headers** – X-Frame-Options, X-Content-Type-Options, Referrer-Policy in next.config.
+- **RLS** – Schema comments updated with example RLS policies for when auth is added.
+
+### UX
+- **Smart error messages** – API response body mapped to user-facing copy (rate limit, message too long, invalid scenario, etc.) with appropriate retry/back actions.
+- **Retry without reload** – Use `reload()` from useChat on error; `keepLastMessageOnError: true`.
+- **Character count** – Live x/500 under input; amber at limit.
+- **Focus after send** – Input refocused after submit for keyboard flow.
+- **Session end summary** – "You gathered X/4 key details and asked N questions."
+- **In-chat goal** – "Goal: Uncover their real business problem" under tracking panels.
+- **Last-question nudge** – "Last question — make it count!" when 1 question left.
+- **First-message starters** – Suggested prompts ("What's your current process?", etc.) before first send.
+- **Uncovered-detail feedback** – Toast "✓ You uncovered: [label]" when a key detail is detected; auto-dismiss 4s.
+- **View brief in chat** – "View brief" in header opens modal with company/contact summary; "Back to interview" closes without losing chat.
+
+### Technical
+- New: `lib/constants.ts` (CHAT_LIMITS), `lib/rate-limit.ts` (in-memory limiter).
+- Updated: `lib/utils.ts` (safeImageUrl, safeMarkdownLink), `app/api/chat/route.ts`, `components/ChatRoom.tsx`, `components/ClientBrief.tsx`, `next.config.ts`, `.env.example`, `scripts/schema.sql`.
+- Docs: UNIFIED-IMPLEMENTATION-PLAN.md; PLAN.md, RECOMMENDATIONS-PLAN.md, V1.2-IMPLEMENTATION-PLAN.md moved to docs/archive/.
+
+---
+
 ## [1.2.2] - 2026-01-30
 
 ### Added

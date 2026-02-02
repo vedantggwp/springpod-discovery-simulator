@@ -89,7 +89,17 @@ CREATE INDEX idx_messages_session ON messages(session_id);
 CREATE INDEX idx_messages_created ON messages(created_at);
 
 -- ============================================
--- ROW LEVEL SECURITY (Optional - enable if adding auth later)
+-- ROW LEVEL SECURITY (enable when adding auth)
 -- ============================================
 -- ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+--
+-- Example policies (adjust to your auth.uid() or session model):
+-- CREATE POLICY "Users see own sessions"
+--   ON sessions FOR SELECT USING (auth.uid() = user_id);
+-- CREATE POLICY "Users insert own sessions"
+--   ON sessions FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- CREATE POLICY "Users see own messages"
+--   ON messages FOR SELECT USING (
+--     session_id IN (SELECT id FROM sessions WHERE user_id = auth.uid())
+--   );

@@ -2,6 +2,8 @@
 
 A comprehensive guide to implementing AI-powered virtual client interactions for educational platforms and course websites.
 
+**For implementation order and version batching,** see [UNIFIED-IMPLEMENTATION-PLAN.md](UNIFIED-IMPLEMENTATION-PLAN.md).
+
 ---
 
 ## Table of Contents

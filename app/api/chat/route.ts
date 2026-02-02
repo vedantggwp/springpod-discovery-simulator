@@ -1,49 +1,81 @@
 import { createOpenAI } from "@ai-sdk/openai";
-import { streamText } from "ai";
+import { streamText, type CoreMessage } from "ai";
 import { createServerClient } from "@/lib/supabase";
 import { AI_CONFIG } from "@/lib/ai-config";
+import { CHAT_LIMITS } from "@/lib/constants";
+import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { scenarios, type ScenarioId } from "@/lib/scenarios";
 
 // CRITICAL: Prevent Vercel serverless timeout (default 10-15s)
 export const maxDuration = 30;
 
-// Validate API key at startup
 const apiKey = process.env.OPENROUTER_API_KEY;
 if (!apiKey) {
-  console.error("OPENROUTER_API_KEY environment variable is not set");
+  console.error("AI provider not configured");
 }
 
 const openrouter = createOpenAI({
   baseURL: "https://openrouter.ai/api/v1",
-  apiKey: apiKey,
+  apiKey: apiKey ?? "",
 });
+
+/** Allow only safe scenario IDs (alphanumeric, hyphen, underscore; 1–64 chars) */
+const SCENARIO_ID_REGEX = /^[a-zA-Z0-9_-]{1,64}$/;
 
 export async function POST(req: Request) {
   try {
-    // Check API key is configured
+    // Require JSON
+    const contentType = req.headers.get("content-type");
+    if (!contentType?.includes("application/json")) {
+      return new Response("Unsupported Media Type", { status: 415 });
+    }
+
     if (!apiKey) {
       return new Response("AI service not configured", { status: 503 });
     }
 
-    const { messages, scenarioId } = await req.json();
-
-    // Validate scenarioId
-    if (!scenarioId) {
-      return new Response("Scenario ID required", { status: 400 });
+    // Rate limit by client identifier
+    const clientId = getClientIdentifier(req);
+    const { ok: rateOk, retryAfterMs } = checkRateLimit(clientId);
+    if (!rateOk) {
+      return new Response("Too Many Requests", {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil(retryAfterMs / 1000)),
+        },
+      });
     }
 
-    // Validate messages array
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response("Invalid JSON", { status: 400 });
+    }
+
+    const { messages, scenarioId } = body as { messages?: unknown; scenarioId?: unknown };
+
+    if (!scenarioId || typeof scenarioId !== "string") {
+      return new Response("Scenario ID required", { status: 400 });
+    }
+    if (!SCENARIO_ID_REGEX.test(scenarioId)) {
+      return new Response("Invalid scenario ID", { status: 400 });
+    }
+
     if (!Array.isArray(messages) || messages.length === 0) {
       return new Response("Messages required", { status: 400 });
     }
+    if (messages.length > CHAT_LIMITS.MAX_MESSAGES_PER_REQUEST) {
+      return new Response("Too many messages", { status: 400 });
+    }
 
-    // Validate message structure and content length
+    const maxLen = CHAT_LIMITS.MAX_MESSAGE_LENGTH;
     for (const msg of messages) {
-      if (!msg.role || !msg.content || typeof msg.content !== "string") {
+      if (!msg || typeof msg !== "object" || !msg.role || !msg.content || typeof msg.content !== "string") {
         return new Response("Invalid message format", { status: 400 });
       }
-      if (msg.content.length > 2000) {
-        return new Response("Message too long", { status: 400 });
+      if (msg.content.length > maxLen) {
+        return new Response(`Message too long (max ${maxLen} characters)`, { status: 400 });
       }
     }
 
@@ -58,13 +90,17 @@ export async function POST(req: Request) {
         .single<{ system_prompt: string; contact_name: string }>();
 
       if (error || !scenarioData) {
-        console.error("Scenario fetch error:", error);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Scenario fetch error:", error?.message ?? "no data");
+        }
         return new Response("Invalid scenario", { status: 400 });
       }
 
       systemPrompt = scenarioData.system_prompt;
     } catch (dbError) {
-      console.error("Database not available, using fallback:", dbError);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Database fallback:", dbError instanceof Error ? dbError.message : "unknown");
+      }
       const fallback = scenarios[scenarioId as ScenarioId];
       if (!fallback) {
         return new Response("Invalid scenario", { status: 400 });
@@ -72,39 +108,39 @@ export async function POST(req: Request) {
       systemPrompt = fallback.systemPrompt;
     }
 
-    // Artificial "thinking" delay for realism
     await new Promise((resolve) => setTimeout(resolve, AI_CONFIG.thinkingDelayMs));
 
-    // Try primary model (Claude 3 Haiku)
     try {
       const result = await streamText({
         model: openrouter(AI_CONFIG.primary.model),
         system: systemPrompt,
-        messages,
+        messages: messages as CoreMessage[],
         maxTokens: AI_CONFIG.primary.maxTokens,
       });
-
       return result.toDataStreamResponse();
     } catch (primaryError) {
-      console.warn("Primary model (Haiku) failed, trying fallback:", primaryError);
-
-      // Fallback to Claude 3.5 Sonnet
+      if (process.env.NODE_ENV === "development") {
+        console.warn("Primary model failed, trying fallback:", primaryError instanceof Error ? primaryError.message : "unknown");
+      }
       try {
         const result = await streamText({
           model: openrouter(AI_CONFIG.fallback.model),
           system: systemPrompt,
-          messages,
-          maxTokens: AI_CONFIG.fallback.maxTokens,
+messages: messages as CoreMessage[],
+        maxTokens: AI_CONFIG.fallback.maxTokens,
         });
-
         return result.toDataStreamResponse();
-      } catch (fallbackError) {
-        console.error("Fallback model also failed:", fallbackError);
-        throw fallbackError;
+      } catch {
+        if (process.env.NODE_ENV === "development") {
+          console.error("Fallback model also failed");
+        }
+        return new Response("AI service unavailable", { status: 503 });
       }
     }
   } catch (error) {
-    console.error("Chat API error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Chat API error:", error instanceof Error ? error.message : "unknown");
+    }
     return new Response("AI service unavailable", { status: 503 });
   }
 }

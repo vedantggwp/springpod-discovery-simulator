@@ -2,6 +2,8 @@
 
 An interactive training tool where students practice interviewing virtual clients to uncover business requirements. Features a retro 8-bit aesthetic and AI-powered conversations.
 
+**Version:** 1.2.4
+
 ## Overview
 
 Students select from three fictional client scenarios and conduct discovery interviews. The AI clients respond realistically, withholding key information until students ask the right questions—just like real client interactions.
@@ -63,11 +65,18 @@ Each scenario has hidden requirements that students must discover through effect
 - **Thinking Delay** - 800ms pause makes responses feel natural
 - **Progress Tracking** - Details tracker and hint panel per scenario
 
-### User Experience
-- **8-Bit Theme** - Retro pixel art avatars and terminal aesthetic
-- **Markdown Support** - AI responses render with proper formatting
-- **Auto-Scroll** - Chat automatically follows new messages
-- **Mobile Responsive** - Works on phones and tablets
+### Security & robustness
+- **Rate limiting** - 20 requests/min per client on the chat API (429 when exceeded)
+- **Input limits** - 500 characters per message, max 50 messages per request; safe URLs for images and markdown links
+- **Security headers** - X-Frame-Options, X-Content-Type-Options, Referrer-Policy
+- **Smart errors** - User-facing messages for rate limit, message too long, invalid scenario, and service unavailable; retry without full reload
+
+### User experience
+- **8-Bit theme** - Retro pixel art avatars and terminal aesthetic
+- **Markdown support** - AI responses render with proper formatting
+- **Auto-scroll** - Chat automatically follows new messages
+- **Mobile responsive** - Works on phones and tablets
+- **Discovery helpers** - Suggested starter questions, in-chat goal line, “View brief” modal, uncovered-detail feedback, session end summary (X/4 details, N questions), last-question nudge, character count (x/500), focus after send
 
 ### Accessibility
 - Keyboard navigation (Tab + Enter)
@@ -107,11 +116,15 @@ Each scenario has hidden requirements that students must discover through effect
 │   ├── scenarios.ts        # Scenario fetch + definitions
 │   ├── supabase.ts         # Supabase clients
 │   ├── ai-config.ts        # AI model config
+│   ├── constants.ts        # Chat limits (message length, max messages)
+│   ├── rate-limit.ts       # In-memory rate limiter for API
 │   ├── detailsTracker.ts   # Completion logic
-│   ├── utils.ts            # Helper functions
+│   ├── utils.ts            # Helpers (cn, safeImageUrl, safeMarkdownLink)
 │   └── types/database.ts   # DB types
 ├── docs/
-│   └── PLAN.md             # Architecture documentation
+│   ├── UNIFIED-IMPLEMENTATION-PLAN.md  # Implementation order & version roadmap
+│   ├── FEATURE-MAP.md      # Product spec, API reference, integration
+│   └── archive/            # Historical plans (PLAN, RECOMMENDATIONS, V1.2)
 ├── CHANGELOG.md            # Version history
 └── .env.example            # Environment template
 ```
@@ -145,15 +158,17 @@ Ensure your platform supports:
 
 ### Customization
 
-- **Scenarios**: Edit `lib/scenarios.ts` to add/modify clients
-- **Turn Limit**: Change `MAX_TURNS` in `components/ChatRoom.tsx`
-- **Thinking Delay**: Adjust timeout in `app/api/chat/route.ts`
-- **Theme Colors**: Modify `tailwind.config.ts`
+- **Scenarios**: Edit `lib/scenarios.ts` or seed via Supabase; turn limit and required details live in scenario data
+- **Message limit**: `lib/constants.ts` — `CHAT_LIMITS.MAX_MESSAGE_LENGTH` (500)
+- **Thinking delay**: `lib/ai-config.ts` — `thinkingDelayMs`
+- **Theme colors**: `tailwind.config.ts`
 
 ## Documentation
 
 - [CHANGELOG.md](CHANGELOG.md) - Version history
-- [docs/PLAN.md](docs/PLAN.md) - Architecture decisions
+- [docs/UNIFIED-IMPLEMENTATION-PLAN.md](docs/UNIFIED-IMPLEMENTATION-PLAN.md) - Implementation order and version roadmap
+- [docs/FEATURE-MAP.md](docs/FEATURE-MAP.md) - Product spec, API reference, integration
+- [docs/archive/](docs/archive/) - Archived plans (PLAN, RECOMMENDATIONS, V1.2)
 
 ## Development
 
