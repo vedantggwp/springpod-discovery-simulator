@@ -11,13 +11,6 @@ describe("WhatsNewBanner", () => {
     expect(elements[0]).toBeInTheDocument();
   });
 
-  it("renders last updated date", () => {
-    render(<WhatsNewBanner />);
-    const elements = screen.getAllByText(/Last updated/);
-    expect(elements.length).toBeGreaterThanOrEqual(1);
-    expect(elements[0]).toBeInTheDocument();
-  });
-
   it("renders what's new summary text from APP_RELEASE", () => {
     render(<WhatsNewBanner />);
     const summary = APP_RELEASE.WHATS_NEW_SUMMARY;

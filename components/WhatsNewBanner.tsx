@@ -12,7 +12,7 @@ interface WhatsNewBannerProps {
  * Full-width at top on mobile; compact top-right panel on desktop.
  */
 export function WhatsNewBanner({ className }: WhatsNewBannerProps) {
-  const { VERSION, LAST_UPDATED, WHATS_NEW_SUMMARY } = APP_RELEASE;
+  const { VERSION, WHATS_NEW_SUMMARY } = APP_RELEASE;
 
   return (
     <div
@@ -22,17 +22,11 @@ export function WhatsNewBanner({ className }: WhatsNewBannerProps) {
         className
       )}
       role="banner"
-      aria-label={`What's new: version ${VERSION}, last updated ${LAST_UPDATED}. ${WHATS_NEW_SUMMARY}`}
+      aria-label={`What's new: version ${VERSION}. ${WHATS_NEW_SUMMARY}`}
     >
       <div className="font-body font-medium text-xs sm:text-sm flex flex-wrap items-center justify-center gap-x-4 gap-y-1 py-1">
         <span className="text-springpod-green text-springpod-glow font-heading uppercase tracking-widest shrink-0">
           [UPDATE] v{VERSION}
-        </span>
-        <span className="text-terminal-slate" aria-hidden="true">
-          —
-        </span>
-        <span className="text-gray-400">
-          Last updated {LAST_UPDATED}
         </span>
         <span className="text-terminal-slate" aria-hidden="true">
           —
