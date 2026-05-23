@@ -482,39 +482,52 @@ GUIDELINES:
 // ============================================
 
 async function seed() {
-  console.log('Seeding scenarios to Supabase...\n');
-  
-  for (const scenario of scenarios) {
-    console.log(`Upserting scenario: ${scenario.id}`);
-    
-    const { error } = await supabase
-      .from('scenarios')
-      .upsert(scenario, { onConflict: 'id' });
-    
-    if (error) {
-      console.error(`  Error: ${error.message}`);
-    } else {
-      console.log(`  ✓ ${scenario.company_name}`);
-    }
+  console.log(`Seeding ${scenarios.length} scenarios to Supabase...\n`);
+
+  // Single bulk upsert: either every row lands or the write rolls back at the
+  // Supabase API level. Previously we iterated and logged per-row, which left the
+  // DB partially updated on failure while still printing "Done!". Throwing here
+  // guarantees the verification pass below only runs on a complete write.
+  const { error: upsertError } = await supabase
+    .from('scenarios')
+    .upsert(scenarios, { onConflict: 'id' });
+
+  if (upsertError) {
+    throw new Error(`Bulk upsert failed: ${upsertError.message}`);
   }
-  
-  console.log('\n--- Verification ---');
-  
+  console.log(`✓ Upserted ${scenarios.length} scenarios.\n`);
+
+  console.log('--- Verification ---');
+
   const { data, error } = await supabase
     .from('scenarios')
     .select('id, company_name, contact_name, difficulty')
     .order('id');
-  
+
   if (error) {
-    console.error('Error fetching scenarios:', error.message);
-  } else {
-    console.log('Scenarios in database:');
-    data.forEach(s => {
-      console.log(`  - ${s.id}: ${s.company_name} (${s.contact_name}) [${s.difficulty}]`);
-    });
+    throw new Error(`Verification fetch failed: ${error.message}`);
   }
-  
+
+  console.log('Scenarios in database:');
+  data.forEach(s => {
+    console.log(`  - ${s.id}: ${s.company_name} (${s.contact_name}) [${s.difficulty}]`);
+  });
+
+  // Sanity check: every scenario we seeded should be readable back.
+  const seededIds = new Set(scenarios.map(s => s.id));
+  const readBackIds = new Set(data.map(s => s.id));
+  const missing = [...seededIds].filter(id => !readBackIds.has(id));
+  if (missing.length > 0) {
+    throw new Error(`Seeded but not readable: ${missing.join(', ')}`);
+  }
+
   console.log('\nDone!');
 }
 
-seed().catch(console.error);
+// Top-level: a thrown error here should fail the script (non-zero exit).
+// Previously this script also ran `seed().catch(console.error)` which silently exits 0
+// — defeating fail-fast. Removed.
+seed().catch(err => {
+  console.error('\nSeed failed:', err.message);
+  process.exit(1);
+});
