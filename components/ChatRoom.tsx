@@ -1,17 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
-import { useChat } from "ai/react";
 import type { Message } from "ai";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { getContactPhotoUrl } from "@/lib/scenarios";
 import { getCompletionStatus, getNewlyObtainedDetails } from "@/lib/detailsTracker";
-import { setSession, clearSession } from "@/lib/sessionStorage";
 import { cn, safeImageUrl, safeMarkdownLink } from "@/lib/utils";
 import { CHAT_LIMITS, getDisplayContentIfEndMeeting } from "@/lib/constants";
 import { AI_CONFIG } from "@/lib/ai-config";
-import type { ChatErrorBody, ChatErrorCode } from "@/lib/api-errors";
+import { useChatSession } from "./chat/useChatSession";
 import { DetailsTracker } from "./DetailsTracker";
 import { HintPanel } from "./HintPanel";
 import type { ScenarioV2 } from "@/lib/scenarios";
@@ -22,119 +20,6 @@ const STARTER_PROMPTS = [
   "What's the main pain point?",
   "Who's involved in this?",
 ];
-
-type ErrorDisplay = {
-  message: string;
-  canRetry: boolean;
-  retryLabel: string;
-};
-
-const GENERIC_ERROR_DISPLAY: ErrorDisplay = {
-  message: "Something went wrong. Please try again.",
-  canRetry: true,
-  retryLabel: "Try again",
-};
-
-const ERROR_DISPLAY: Record<ChatErrorCode, ErrorDisplay> = {
-  RATE_LIMITED: {
-    message: "You're sending messages too quickly. Please wait about a minute, then try again.",
-    canRetry: true,
-    retryLabel: "Try again",
-  },
-  MESSAGE_TOO_LONG: {
-    message: "Please shorten your message to 500 characters.",
-    canRetry: false,
-    retryLabel: "Back to lobby",
-  },
-  INVALID_REQUEST: {
-    message: "This conversation is too long or the request was invalid. Start a new interview or try a shorter message.",
-    canRetry: false,
-    retryLabel: "Start over",
-  },
-  AI_UNAVAILABLE: {
-    message: "The client is temporarily unavailable. Please try again in a moment.",
-    canRetry: true,
-    retryLabel: "Try again",
-  },
-  NOT_CONFIGURED: {
-    message: "The client is temporarily unavailable. Please try again in a moment.",
-    canRetry: true,
-    retryLabel: "Try again",
-  },
-  SCENARIO_NOT_FOUND: {
-    message: "Something went wrong with this session. Return to the lobby and pick a client again.",
-    canRetry: false,
-    retryLabel: "Back to lobby",
-  },
-};
-
-class ChatApiError extends Error {
-  code: ChatErrorCode;
-  retryAfterMs?: number;
-
-  constructor(body: ChatErrorBody) {
-    super(body.message);
-    this.name = "ChatApiError";
-    this.code = body.code;
-    this.retryAfterMs = body.retryAfterMs;
-  }
-}
-
-function isChatErrorCode(value: unknown): value is ChatErrorCode {
-  return typeof value === "string" && value in ERROR_DISPLAY;
-}
-
-async function readChatError(response: Response): Promise<ChatErrorBody> {
-  try {
-    const body = (await response.json()) as Partial<ChatErrorBody>;
-    if (isChatErrorCode(body.code) && typeof body.message === "string") {
-      return {
-        code: body.code,
-        message: body.message,
-        ...(typeof body.retryAfterMs === "number" ? { retryAfterMs: body.retryAfterMs } : {}),
-      };
-    }
-  } catch {
-    // Fall through to an HTTP-status based fallback for non-JSON failures.
-  }
-
-  if (response.status === 429) {
-    return { code: "RATE_LIMITED", message: "Rate limited" };
-  }
-  if (response.status === 503) {
-    return { code: "AI_UNAVAILABLE", message: "AI service unavailable" };
-  }
-  return { code: "INVALID_REQUEST", message: "Request failed" };
-}
-
-async function chatFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  const response = await fetch(input, init);
-  if (!response.ok) {
-    throw new ChatApiError(await readChatError(response));
-  }
-  return response;
-}
-
-/** Map API error codes to user-friendly copy and optional retry behavior. */
-function getErrorMessage(error: Error | undefined): ErrorDisplay {
-  if (!error?.message) {
-    return GENERIC_ERROR_DISPLAY;
-  }
-  if (error instanceof ChatApiError) {
-    return ERROR_DISPLAY[error.code];
-  }
-  return {
-    message: "Connection lost. Please try again.",
-    canRetry: true,
-    retryLabel: "Try again",
-  };
-}
-
-const OPENING_MESSAGE = (openingLine: string): Message => ({
-  id: "opening",
-  role: "assistant",
-  content: openingLine,
-});
 
 interface ChatRoomProps {
   scenario: ScenarioV2;
@@ -148,28 +33,9 @@ export function ChatRoom({ scenario, onBack, restoredMessages }: ChatRoomProps) 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const briefModalTriggerRef = useRef<HTMLButtonElement>(null);
-  const [lastUserMessageTime, setLastUserMessageTime] = useState<number | null>(null);
   const [showBriefModal, setShowBriefModal] = useState(false);
   const [uncoveredLabel, setUncoveredLabel] = useState<string | null>(null);
   const prevCompletionStatusRef = useRef<ReturnType<typeof getCompletionStatus> | null>(null);
-
-  const MAX_TURNS = scenario.max_turns || 15;
-
-  const initialMessages = useMemo(() => {
-    if (restoredMessages && restoredMessages.length > 0) return restoredMessages;
-    return [OPENING_MESSAGE(scenario.opening_line)];
-  }, [restoredMessages, scenario.opening_line]);
-
-  // Contact photo URL - sanitize DB value (https only) or fallback to DiceBear
-  const contactPhotoUrl = useMemo(() => {
-    const safe = safeImageUrl(scenario.contact_photo_url);
-    return safe ?? getContactPhotoUrl(scenario.avatarSeed);
-  }, [scenario.contact_photo_url, scenario.avatarSeed]);
-
-  const handleBack = useCallback(() => {
-    clearSession();
-    onBack();
-  }, [onBack]);
 
   const {
     messages,
@@ -178,35 +44,29 @@ export function ChatRoom({ scenario, onBack, restoredMessages }: ChatRoomProps) 
     handleSubmit,
     isLoading,
     error,
+    errorUI,
     reload,
-  } = useChat({
-    id: `session-${scenario.id}`,
-    api: "/api/chat",
-    fetch: chatFetch,
-    body: { scenarioId: scenario.id },
-    initialMessages,
-    keepLastMessageOnError: true,
-  });
+    lastUserMessageTime,
+    userMessageCount,
+    isSessionEnded,
+    meetingEndedByConduct,
+    finalMessageFromConduct,
+    isFirstMessage,
+    isLastQuestion,
+    maxTurns,
+    resetSession,
+  } = useChatSession(scenario, restoredMessages);
 
-  // Persist session to localStorage (30 min expiry handled in sessionStorage)
-  useEffect(() => {
-    setSession(scenario.id, messages);
-  }, [scenario.id, messages]);
+  // Contact photo URL - sanitize DB value (https only) or fallback to DiceBear
+  const contactPhotoUrl = useMemo(() => {
+    const safe = safeImageUrl(scenario.contact_photo_url);
+    return safe ?? getContactPhotoUrl(scenario.avatarSeed);
+  }, [scenario.contact_photo_url, scenario.avatarSeed]);
 
-  const errorUI = useMemo(() => getErrorMessage(error), [error]);
-
-  // Detect [END_MEETING]...[/END_MEETING] in latest assistant message (client ended meeting due to conduct) — derived in render
-  const conductResult = useMemo(() => {
-    const last = messages[messages.length - 1];
-    if (!last || last.role !== "assistant" || typeof last.content !== "string") return null;
-    return getDisplayContentIfEndMeeting(last.content);
-  }, [messages]);
-  const meetingEndedByConduct = conductResult?.meetingEnded ?? false;
-  const finalMessageFromConduct = conductResult?.finalMessage ?? null;
-
-  // Calculate turns and session end (turn limit or client ended meeting due to conduct)
-  const userMessageCount = messages.filter((m) => m.role === "user").length;
-  const isSessionEnded = userMessageCount >= MAX_TURNS || meetingEndedByConduct;
+  const handleBack = useCallback(() => {
+    resetSession();
+    onBack();
+  }, [onBack, resetSession]);
 
   // Track completion status for required details (pass data directly from DB scenario)
   const completionStatus = useMemo(
@@ -225,16 +85,6 @@ export function ChatRoom({ scenario, onBack, restoredMessages }: ChatRoomProps) 
       return () => clearTimeout(t);
     }
   }, [completionStatus]);
-
-  // Track last user message time for time-based hints (defer setState to avoid sync setState in effect)
-  const prevUserMessageCountRef = useRef(0);
-  useEffect(() => {
-    const currentUserCount = messages.filter((m) => m.role === "user").length;
-    if (currentUserCount > prevUserMessageCountRef.current) {
-      prevUserMessageCountRef.current = currentUserCount;
-      queueMicrotask(() => setLastUserMessageTime(Date.now()));
-    }
-  }, [messages]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -264,10 +114,6 @@ export function ChatRoom({ scenario, onBack, restoredMessages }: ChatRoomProps) 
     handleSubmit(e);
     requestAnimationFrame(() => inputRef.current?.focus());
   };
-
-  const isFirstMessage = userMessageCount === 0;
-  const questionsLeft = MAX_TURNS - userMessageCount;
-  const isLastQuestion = questionsLeft === 1 && !isSessionEnded;
 
   return (
     <div className="h-[100dvh] w-full max-w-2xl mx-auto flex flex-col glass-card border-x border-white/10">
@@ -631,15 +477,15 @@ export function ChatRoom({ scenario, onBack, restoredMessages }: ChatRoomProps) 
             transition={{ duration: 0.2 }}
             className={cn(
               "font-heading text-xs font-body inline-block",
-              MAX_TURNS - userMessageCount <= 2 && userMessageCount < MAX_TURNS
+                maxTurns - userMessageCount <= 2 && userMessageCount < maxTurns
                 ? "text-alert-amber"
                 : "text-springpod-green"
             )}
-            aria-label={`Questions ${userMessageCount} of ${MAX_TURNS}. ${MAX_TURNS - userMessageCount} left.`}
+            aria-label={`Questions ${userMessageCount} of ${maxTurns}. ${maxTurns - userMessageCount} left.`}
           >
-            [QUERIES {String(userMessageCount).padStart(2, "0")}/{String(MAX_TURNS).padStart(2, "0")}]
-            {MAX_TURNS - userMessageCount <= 2 && userMessageCount < MAX_TURNS
-              ? ` · ${MAX_TURNS - userMessageCount} left`
+            [QUERIES {String(userMessageCount).padStart(2, "0")}/{String(maxTurns).padStart(2, "0")}]
+            {maxTurns - userMessageCount <= 2 && userMessageCount < maxTurns
+              ? ` · ${maxTurns - userMessageCount} left`
               : ""}
           </motion.span>
           <div className="font-body text-[10px] text-terminal-slate flex flex-wrap gap-x-4 gap-y-0" aria-hidden="true">
