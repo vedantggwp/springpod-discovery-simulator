@@ -9,6 +9,7 @@ import { getCompletionStatus, getNewlyObtainedDetails } from "@/lib/detailsTrack
 import { cn, safeImageUrl, safeMarkdownLink } from "@/lib/utils";
 import { CHAT_LIMITS, getDisplayContentIfEndMeeting } from "@/lib/constants";
 import { AI_CONFIG } from "@/lib/ai-config";
+import { BriefModal } from "./chat/BriefModal";
 import { useChatSession } from "./chat/useChatSession";
 import { DetailsTracker } from "./DetailsTracker";
 import { HintPanel } from "./HintPanel";
@@ -98,17 +99,6 @@ export function ChatRoom({ scenario, onBack, restoredMessages }: ChatRoomProps) 
     setShowBriefModal(false);
     requestAnimationFrame(() => briefModalTriggerRef.current?.focus());
   }, []);
-  useEffect(() => {
-    if (!showBriefModal) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        closeBriefModal();
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [showBriefModal, closeBriefModal]);
 
   const handleSubmitWithFocus = (e?: React.FormEvent) => {
     handleSubmit(e);
@@ -496,76 +486,7 @@ export function ChatRoom({ scenario, onBack, restoredMessages }: ChatRoomProps) 
         </div>
       ) : null}
 
-      {/* View brief modal: Escape to close, focus returns to trigger */}
-      <AnimatePresence>
-        {showBriefModal ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
-            onClick={closeBriefModal}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Client brief summary"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-lg glass-card border border-white/10 p-6"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-heading text-springpod-green text-springpod-glow text-lg">CLIENT BRIEF</h2>
-                <button
-                  type="button"
-                  onClick={closeBriefModal}
-                  aria-label="Close brief"
-                  className="font-body text-gray-400 hover:text-white text-base focus-visible:ring-2 focus-visible:ring-springpod-green focus-visible:ring-offset-2 rounded"
-                >
-                  ✕
-                </button>
-              </div>
-              <h3 className="font-heading text-springpod-green text-base mb-2">{scenario.company_name}</h3>
-              {scenario.company_why_contacted ? (
-                <p className="font-body text-gray-300 text-base italic border-l-2 border-stellar-cyan pl-3 mb-3">
-                  {scenario.company_why_contacted}
-                </p>
-              ) : null}
-              {(scenario.company_context ?? []).length > 0 ? (
-                <ul className="space-y-1 mb-3 font-body text-sm text-gray-400">
-                  {(scenario.company_context ?? []).map((item, i) => (
-                    <li key={i} className="flex gap-2">
-                      <span className="text-springpod-green">•</span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-              <div className="pt-3 border-t border-green-900/50">
-                <p className="font-body text-sm text-gray-300">
-                  <span className="text-springpod-green">{scenario.contact_name}</span>
-                  {" · "}
-                  {scenario.contact_role}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={closeBriefModal}
-                className={cn(
-                  "mt-4 w-full font-heading text-sm text-springpod-green",
-                  "border border-springpod-green shadow-green-glow px-4 py-2",
-                  "hover:bg-springpod-green hover:text-black transition-colors",
-                  "focus-visible:ring-2 focus-visible:ring-springpod-green"
-                )}
-              >
-                Back to interview
-              </button>
-            </motion.div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      <BriefModal scenario={scenario} open={showBriefModal} onClose={closeBriefModal} />
     </div>
   );
 }
