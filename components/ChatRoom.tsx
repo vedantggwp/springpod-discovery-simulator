@@ -11,6 +11,7 @@ import { getDisplayContentIfEndMeeting } from "@/lib/constants";
 import { AI_CONFIG } from "@/lib/ai-config";
 import { BriefModal } from "./chat/BriefModal";
 import { ChatComposer } from "./chat/ChatComposer";
+import { ChatHeader } from "./chat/ChatHeader";
 import { useChatSession } from "./chat/useChatSession";
 import { DetailsTracker } from "./DetailsTracker";
 import { HintPanel } from "./HintPanel";
@@ -103,71 +104,16 @@ export function ChatRoom({ scenario, onBack, restoredMessages }: ChatRoomProps) 
 
   return (
     <div className="h-[100dvh] w-full max-w-2xl mx-auto flex flex-col glass-card border-x border-white/10">
-      {/* Header: EXIT + clickable avatar (opens brief, orbital on primary avatar) */}
-      <header className="glass-card flex items-center justify-between px-4 py-3 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleBack}
-            aria-label="Exit interview and return to client selection"
-            className={cn(
-              "font-heading text-springpod-green text-sm",
-              "hover:text-green-300 transition-colors",
-              "focus-visible:ring-2 focus-visible:ring-springpod-green focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900",
-              "px-2 py-1"
-            )}
-          >
-            ← EXIT
-          </button>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <motion.button
-            ref={briefModalTriggerRef}
-            type="button"
-            onClick={() => setShowBriefModal(true)}
-            aria-label="View client brief again"
-            aria-haspopup="dialog"
-            aria-expanded={showBriefModal}
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.98 }}
-            className={cn(
-              "relative rounded-lg border-2 border-white/10 overflow-visible",
-              "transition-all duration-200",
-              "hover:border-springpod-green hover:shadow-neon-green focus-visible:ring-2 focus-visible:ring-springpod-green focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
-            )}
-          >
-            {/* img: DiceBear/Supabase avatars; next/image does not support external SVGs */}
-            <img
-              src={contactPhotoUrl}
-              alt=""
-              width={48}
-              height={48}
-              className="rounded-lg block"
-            />
-            {!prefersReducedMotion && (
-              <span
-                className="absolute left-1/2 top-1/2 w-1.5 h-1.5 rounded-full bg-springpod-green shadow-[0_0_4px_rgba(34,197,94,0.8)] animate-orbit-sm pointer-events-none"
-                aria-hidden="true"
-                style={{ marginLeft: "-3px", marginTop: "-3px" }}
-              />
-            )}
-          </motion.button>
-          <div className="text-right">
-            <h1 className="font-heading text-springpod-green text-springpod-glow text-xl">
-              {scenario.contact_name}
-            </h1>
-            {isLoading ? (
-              <p className="font-body text-stellar-cyan text-xs animate-pulse" role="status">
-                Neural Link: Processing
-              </p>
-            ) : (
-              <p className="font-body text-gray-400 text-sm">
-                {scenario.contact_role} • {scenario.company_name}
-              </p>
-            )}
-          </div>
-        </div>
-      </header>
+      <ChatHeader
+        scenario={scenario}
+        contactPhotoUrl={contactPhotoUrl}
+        isLoading={isLoading}
+        prefersReducedMotion={prefersReducedMotion}
+        showBriefModal={showBriefModal}
+        briefModalTriggerRef={briefModalTriggerRef}
+        onBack={handleBack}
+        onOpenBrief={() => setShowBriefModal(true)}
+      />
 
       {/* HUD Dashboard: equal-width Info Progress + Hints */}
       <div className="grid grid-cols-2 gap-2 px-4 py-2 glass-card border-b border-white/10">
