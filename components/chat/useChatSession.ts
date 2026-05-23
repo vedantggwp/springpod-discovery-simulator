@@ -6,7 +6,7 @@ import { CHAT_LIMITS, getDisplayContentIfEndMeeting } from "@/lib/constants";
 import type { ScenarioV2 } from "@/lib/scenarios";
 import { clearSession, setSession } from "@/lib/sessionStorage";
 
-type ErrorDisplay = {
+export type ErrorDisplay = {
   message: string;
   canRetry: boolean;
   retryLabel: string;
