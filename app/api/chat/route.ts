@@ -2,6 +2,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { streamText, type CoreMessage } from "ai";
 import { createServerClient } from "@/lib/supabase";
 import { AI_CONFIG } from "@/lib/ai-config";
+import { jsonError } from "@/lib/api-errors";
 import { CHAT_LIMITS, CRITICAL_SYSTEM_PREFIX, SYSTEM_PROMPT_RULES } from "@/lib/constants";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { scenarios, type ScenarioId } from "@/lib/scenarios";
@@ -37,39 +38,39 @@ type ParsedChatRequest = { scenarioId: string; messages: CoreMessage[] };
 
 function parseChatRequest(body: unknown): ParsedChatRequest | Response {
   if (!body || typeof body !== "object") {
-    return new Response("Invalid request body", { status: 400 });
+    return jsonError("INVALID_REQUEST", "Invalid request body", 400);
   }
   const { scenarioId, messages } = body as { scenarioId?: unknown; messages?: unknown };
 
   if (typeof scenarioId !== "string" || !scenarioId) {
-    return new Response("Scenario ID required", { status: 400 });
+    return jsonError("INVALID_REQUEST", "Scenario ID required", 400);
   }
   if (!SCENARIO_ID_REGEX.test(scenarioId)) {
-    return new Response("Invalid scenario ID", { status: 400 });
+    return jsonError("INVALID_REQUEST", "Invalid scenario ID", 400);
   }
 
   if (!Array.isArray(messages) || messages.length === 0) {
-    return new Response("Messages required", { status: 400 });
+    return jsonError("INVALID_REQUEST", "Messages required", 400);
   }
   if (messages.length > CHAT_LIMITS.MAX_MESSAGES_PER_REQUEST) {
-    return new Response("Too many messages", { status: 400 });
+    return jsonError("INVALID_REQUEST", "Too many messages", 400);
   }
 
   const maxLen = CHAT_LIMITS.MAX_MESSAGE_LENGTH;
   const parsed: CoreMessage[] = [];
   for (const msg of messages) {
     if (!msg || typeof msg !== "object") {
-      return new Response("Invalid message format", { status: 400 });
+      return jsonError("INVALID_REQUEST", "Invalid message format", 400);
     }
     const m = msg as Record<string, unknown>;
     if (typeof m.role !== "string" || !VALID_ROLES.has(m.role as CoreMessage["role"])) {
-      return new Response("Invalid message role", { status: 400 });
+      return jsonError("INVALID_REQUEST", "Invalid message role", 400);
     }
     if (typeof m.content !== "string") {
-      return new Response("Invalid message content", { status: 400 });
+      return jsonError("INVALID_REQUEST", "Invalid message content", 400);
     }
     if (m.role === "user" && m.content.length > maxLen) {
-      return new Response(`Message too long (max ${maxLen} characters)`, { status: 400 });
+      return jsonError("MESSAGE_TOO_LONG", `Message too long (max ${maxLen} characters)`, 400);
     }
     parsed.push({ role: m.role as CoreMessage["role"], content: m.content } as CoreMessage);
   }
@@ -133,19 +134,19 @@ export async function POST(req: Request) {
     // Require JSON
     const contentType = req.headers.get("content-type");
     if (!contentType?.includes("application/json")) {
-      return new Response("Unsupported Media Type", { status: 415 });
+      return jsonError("INVALID_REQUEST", "Unsupported Media Type", 415);
     }
 
     if (!apiKey) {
-      return new Response("AI service not configured", { status: 503 });
+      return jsonError("NOT_CONFIGURED", "AI service not configured", 503);
     }
 
     // Rate limit by client identifier (Upstash when env set, else in-memory)
     const clientId = getClientIdentifier(req);
     const { ok: rateOk, retryAfterMs } = await checkRateLimit(clientId);
     if (!rateOk) {
-      return new Response("Too Many Requests", {
-        status: 429,
+      return jsonError("RATE_LIMITED", "Too Many Requests", 429, {
+        retryAfterMs,
         headers: {
           "Retry-After": String(Math.ceil(retryAfterMs / 1000)),
         },
@@ -156,7 +157,7 @@ export async function POST(req: Request) {
     try {
       body = await req.json();
     } catch {
-      return new Response("Invalid JSON", { status: 400 });
+      return jsonError("INVALID_REQUEST", "Invalid JSON", 400);
     }
 
     const parsed = parseChatRequest(body);
@@ -164,7 +165,7 @@ export async function POST(req: Request) {
 
     const systemPrompt = await resolveSystemPrompt(parsed.scenarioId);
     if (!systemPrompt) {
-      return new Response("Invalid scenario", { status: 400 });
+      return jsonError("SCENARIO_NOT_FOUND", "Invalid scenario", 400);
     }
 
     const fullSystemPrompt = CRITICAL_SYSTEM_PREFIX + "\n\n" + systemPrompt + SYSTEM_PROMPT_RULES;
@@ -198,13 +199,13 @@ export async function POST(req: Request) {
         if (process.env.NODE_ENV === "development") {
           console.error("Fallback model also failed");
         }
-        return new Response("AI service unavailable", { status: 503 });
+        return jsonError("AI_UNAVAILABLE", "AI service unavailable", 503);
       }
     }
   } catch (error) {
     if (process.env.NODE_ENV === "development") {
       console.error("Chat API error:", error instanceof Error ? error.message : "unknown");
     }
-    return new Response("AI service unavailable", { status: 503 });
+    return jsonError("AI_UNAVAILABLE", "AI service unavailable", 503);
   }
 }

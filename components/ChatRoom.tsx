@@ -11,6 +11,7 @@ import { setSession, clearSession } from "@/lib/sessionStorage";
 import { cn, safeImageUrl, safeMarkdownLink } from "@/lib/utils";
 import { CHAT_LIMITS, getDisplayContentIfEndMeeting } from "@/lib/constants";
 import { AI_CONFIG } from "@/lib/ai-config";
+import type { ChatErrorBody, ChatErrorCode } from "@/lib/api-errors";
 import { DetailsTracker } from "./DetailsTracker";
 import { HintPanel } from "./HintPanel";
 import type { ScenarioV2 } from "@/lib/scenarios";
@@ -22,54 +23,105 @@ const STARTER_PROMPTS = [
   "Who's involved in this?",
 ];
 
-/** Map API error message to user-friendly copy and optional retry behavior. */
-function getErrorMessage(error: Error | undefined): {
+type ErrorDisplay = {
   message: string;
   canRetry: boolean;
   retryLabel: string;
-} {
+};
+
+const GENERIC_ERROR_DISPLAY: ErrorDisplay = {
+  message: "Something went wrong. Please try again.",
+  canRetry: true,
+  retryLabel: "Try again",
+};
+
+const ERROR_DISPLAY: Record<ChatErrorCode, ErrorDisplay> = {
+  RATE_LIMITED: {
+    message: "You're sending messages too quickly. Please wait about a minute, then try again.",
+    canRetry: true,
+    retryLabel: "Try again",
+  },
+  MESSAGE_TOO_LONG: {
+    message: "Please shorten your message to 500 characters.",
+    canRetry: false,
+    retryLabel: "Back to lobby",
+  },
+  INVALID_REQUEST: {
+    message: "This conversation is too long or the request was invalid. Start a new interview or try a shorter message.",
+    canRetry: false,
+    retryLabel: "Start over",
+  },
+  AI_UNAVAILABLE: {
+    message: "The client is temporarily unavailable. Please try again in a moment.",
+    canRetry: true,
+    retryLabel: "Try again",
+  },
+  NOT_CONFIGURED: {
+    message: "The client is temporarily unavailable. Please try again in a moment.",
+    canRetry: true,
+    retryLabel: "Try again",
+  },
+  SCENARIO_NOT_FOUND: {
+    message: "Something went wrong with this session. Return to the lobby and pick a client again.",
+    canRetry: false,
+    retryLabel: "Back to lobby",
+  },
+};
+
+class ChatApiError extends Error {
+  code: ChatErrorCode;
+  retryAfterMs?: number;
+
+  constructor(body: ChatErrorBody) {
+    super(body.message);
+    this.name = "ChatApiError";
+    this.code = body.code;
+    this.retryAfterMs = body.retryAfterMs;
+  }
+}
+
+function isChatErrorCode(value: unknown): value is ChatErrorCode {
+  return typeof value === "string" && value in ERROR_DISPLAY;
+}
+
+async function readChatError(response: Response): Promise<ChatErrorBody> {
+  try {
+    const body = (await response.json()) as Partial<ChatErrorBody>;
+    if (isChatErrorCode(body.code) && typeof body.message === "string") {
+      return {
+        code: body.code,
+        message: body.message,
+        ...(typeof body.retryAfterMs === "number" ? { retryAfterMs: body.retryAfterMs } : {}),
+      };
+    }
+  } catch {
+    // Fall through to an HTTP-status based fallback for non-JSON failures.
+  }
+
+  if (response.status === 429) {
+    return { code: "RATE_LIMITED", message: "Rate limited" };
+  }
+  if (response.status === 503) {
+    return { code: "AI_UNAVAILABLE", message: "AI service unavailable" };
+  }
+  return { code: "INVALID_REQUEST", message: "Request failed" };
+}
+
+async function chatFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const response = await fetch(input, init);
+  if (!response.ok) {
+    throw new ChatApiError(await readChatError(response));
+  }
+  return response;
+}
+
+/** Map API error codes to user-friendly copy and optional retry behavior. */
+function getErrorMessage(error: Error | undefined): ErrorDisplay {
   if (!error?.message) {
-    return {
-      message: "Something went wrong. Please try again.",
-      canRetry: true,
-      retryLabel: "Try again",
-    };
+    return GENERIC_ERROR_DISPLAY;
   }
-  const m = error.message;
-  if (m.includes("Too Many Requests") || m.includes("429")) {
-    return {
-      message: "You're sending messages too quickly. Please wait about a minute, then try again.",
-      canRetry: true,
-      retryLabel: "Try again",
-    };
-  }
-  if (m.includes("Message too long") || m.includes("500 characters")) {
-    return {
-      message: "Please shorten your message to 500 characters.",
-      canRetry: false,
-      retryLabel: "Back to lobby",
-    };
-  }
-  if (m.includes("Too many messages")) {
-    return {
-      message: "This conversation is too long. Start a new interview or try a shorter message.",
-      canRetry: false,
-      retryLabel: "Start over",
-    };
-  }
-  if (m.includes("AI service") || m.includes("not configured") || m.includes("unavailable") || m.includes("503")) {
-    return {
-      message: "The client is temporarily unavailable. Please try again in a moment.",
-      canRetry: true,
-      retryLabel: "Try again",
-    };
-  }
-  if (m.includes("Invalid scenario") || m.includes("Invalid scenario ID")) {
-    return {
-      message: "Something went wrong with this session. Return to the lobby and pick a client again.",
-      canRetry: false,
-      retryLabel: "Back to lobby",
-    };
+  if (error instanceof ChatApiError) {
+    return ERROR_DISPLAY[error.code];
   }
   return {
     message: "Connection lost. Please try again.",
@@ -130,6 +182,7 @@ export function ChatRoom({ scenario, onBack, restoredMessages }: ChatRoomProps) 
   } = useChat({
     id: `session-${scenario.id}`,
     api: "/api/chat",
+    fetch: chatFetch,
     body: { scenarioId: scenario.id },
     initialMessages,
     keepLastMessageOnError: true,
