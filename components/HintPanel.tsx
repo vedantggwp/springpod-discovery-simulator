@@ -69,8 +69,12 @@ export function HintPanel({
     });
   }, [messages, allHints, usedHintIds]);
 
-  // Check for time-based hints
-  // Use a ref to track which hints have had timers created
+  // Check for time-based hints.
+  // The ref tracks "this hint has a live or already-fired timer". A hint stays in the set
+  // after it fires (so we don't schedule a duplicate on the next re-render). On effect
+  // teardown, we cancel any pending timers AND unmark *those* hints so a subsequent
+  // re-run can re-schedule them — otherwise a cleanup-without-fire would permanently
+  // suppress the hint.
   const timerCreatedForRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -84,19 +88,26 @@ export function HintPanel({
         !timerCreatedForRef.current.has(h.id)
     );
 
-    const timers = timeBasedHints.map((hint) => {
-      // Mark this hint as having a timer created
+    const timerEntries = timeBasedHints.map((hint) => {
+      // Mark as scheduled so a re-render mid-delay doesn't create a duplicate timer.
       timerCreatedForRef.current.add(hint.id);
-
-      return setTimeout(() => {
+      const id = setTimeout(() => {
         setActiveHints((prev) => {
           if (prev.some((h) => h.hint.id === hint.id)) return prev;
           return [...prev, { hint, triggeredAt: Date.now(), dismissed: false }];
         });
+        // Timer fired — keep `hint.id` in the ref so we don't re-fire on next re-render.
       }, (hint.delaySeconds || 30) * 1000);
+      return { hintId: hint.id, timerId: id };
     });
 
-    return () => timers.forEach(clearTimeout);
+    return () => {
+      // Cancel pending timers AND unmark them so a subsequent re-run can re-schedule.
+      timerEntries.forEach(({ hintId, timerId }) => {
+        clearTimeout(timerId);
+        timerCreatedForRef.current.delete(hintId);
+      });
+    };
   }, [lastUserMessageTime, allHints, usedHintIds]);
 
   // Trigger keyword check when messages change

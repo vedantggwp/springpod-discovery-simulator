@@ -89,17 +89,16 @@ CREATE INDEX idx_messages_session ON messages(session_id);
 CREATE INDEX idx_messages_created ON messages(created_at);
 
 -- ============================================
--- ROW LEVEL SECURITY (enable when adding auth)
+-- ROW LEVEL SECURITY
 -- ============================================
--- ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+-- All public tables have RLS enabled. Server-side code uses the SERVICE_ROLE key
+-- which bypasses RLS; client-side code uses the ANON/PUBLISHABLE key which
+-- respects RLS.
 --
--- Example policies (adjust to your auth.uid() or session model):
--- CREATE POLICY "Users see own sessions"
---   ON sessions FOR SELECT USING (auth.uid() = user_id);
--- CREATE POLICY "Users insert own sessions"
---   ON sessions FOR INSERT WITH CHECK (auth.uid() = user_id);
--- CREATE POLICY "Users see own messages"
---   ON messages FOR SELECT USING (
---     session_id IN (SELECT id FROM sessions WHERE user_id = auth.uid())
---   );
+-- scenarios: anon may SELECT (public content). No anon writes.
+-- sessions:  no anon access. Service-role only.
+-- messages:  no anon access. Service-role only.
+--
+-- When user auth is added, add per-row policies referencing auth.uid() AFTER
+-- adding a user_id column (not currently present in sessions/messages).
+-- See supabase/migrations/20260523125434_enable_rls_with_public_scenarios.sql for the applied policies.

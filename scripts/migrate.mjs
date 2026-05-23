@@ -89,10 +89,26 @@ CREATE INDEX IF NOT EXISTS idx_messages_session ON messages(session_id);
 CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(created_at);
 `;
 
+/**
+ * Extract the project ref from a Supabase Postgres connection string.
+ * Format: postgres://USER:PASS@db.<projectRef>.supabase.co:5432/postgres
+ * Returns null on any parse failure (never throws, never logs the password).
+ */
+function extractProjectRef(connStr) {
+  try {
+    const url = new URL(connStr);
+    const match = url.hostname.match(/^db\.([a-z0-9]+)\.supabase\.co$/);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
+}
+
 async function migrate() {
   console.log('Connecting to Supabase database...');
-  console.log('Project:', projectRef);
-  
+  const projectRef = extractProjectRef(connectionString);
+  if (projectRef) console.log('Project:', projectRef);
+
   const client = new Client({ connectionString });
   
   try {

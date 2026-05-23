@@ -13,6 +13,33 @@ _No unreleased changes._
 
 ---
 
+## [1.5.0] - 2026-05-23
+
+### Added
+- **Row Level Security on all public tables.** New migration `supabase/migrations/20260523125434_enable_rls_with_public_scenarios.sql` enables RLS on `scenarios`, `sessions`, `messages`. `scenarios` has a `public_read_scenarios` policy for `anon, authenticated` SELECT (lobby/brief read continues working via publishable key); `sessions` and `messages` are locked down (service_role only — future server-side persistence still works without breaking anything).
+- **Structured JSON errors** from `/api/chat`. `lib/api-errors.ts` defines the `ChatErrorCode` enum (`RATE_LIMITED`, `SCENARIO_NOT_FOUND`, `INVALID_REQUEST`, `MESSAGE_TOO_LONG`, `AI_UNAVAILABLE`, `NOT_CONFIGURED`) and a `jsonError()` helper. The chat route emits `{code, message}` JSON for every error path; the UI switches on `code` (no more substring parsing of raw text). The existing `Retry-After` header is preserved for HTTP-level rate-limit semantics.
+- **Single canonical scenarios source.** `lib/scenarios-data.json` is now the source of truth for scenario content. Both the runtime fallback (`lib/scenarios.ts`) and the seed script (`scripts/seed-scenarios.mjs`) consume it. Eliminates the three-contract drift between runtime, seed, and DB.
+- **LICENSE** (MIT) and **MANIFEST.md** for project documentation hygiene.
+
+### Changed
+- **Decomposed `components/ChatRoom.tsx`** from 672 LOC to 181 LOC over 6 incremental commits. Extracted `useChatSession` hook (orchestration: messages, persistence, turns, send/reset) and 5 dumb subcomponents under `components/chat/`: `BriefModal`, `ChatComposer`, `ChatHeader`, `SessionFooter`, `ChatTranscript`. No behavior change.
+- **`app/api/chat/route.ts`** — extracted `parseChatRequest()` (real role/content validation; no more `as CoreMessage[]` cast at the call site) and `resolveSystemPrompt()` (fallback policy: `PGRST116` → 400 distinguishes user-typo from infra; any other Supabase error → hardcoded fallback so chat degrades gracefully during DB outages).
+- **`scripts/seed-scenarios.mjs`** — single bulk upsert (atomic at the Supabase API), throws on error, removed the duplicate `seed().catch(console.error)` that silently exited 0, added read-back sanity check, `process.exit(1)` on any failure.
+- **`components/HintPanel.tsx`** — fixed timer-cleanup race that permanently suppressed hints when the effect re-ran mid-delay. Cleanup now both `clearTimeout`s and unmarks pending timers from the tracking ref.
+- **`scripts/migrate.mjs`** — undefined `projectRef` console.log fixed; now safely derives the ref from `DATABASE_URL` via URL parsing (never logs the password).
+- **`scripts/schema.sql`** — replaced the broken commented RLS example block (referenced a non-existent `user_id` column) with an accurate description of the applied RLS state.
+
+### Removed
+- **Dead `supabase` Proxy export** from `lib/supabase.ts` — repo-wide grep confirmed zero consumers. Only `getSupabase()` (client publishable key) and `createServerClient()` (server service_role) remain.
+
+### Fixed
+- **`eslint.config.mjs`** — removed `scripts/**` from `ignores`; added a Node-aware override (`process`/`console`/`Buffer` as globals, `no-console: off`) so operational scripts get the same quality gate as runtime code.
+
+### Security
+- See the RLS Added entry above. Resolves the critical `rls_disabled` advisory previously flagged by Supabase MCP on all 3 public tables.
+
+---
+
 ## [1.4.0] - 2026-02-02
 
 ### Added (v1.3.0 – Quality & resilience)

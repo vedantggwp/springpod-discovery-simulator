@@ -19,13 +19,6 @@ export function getSupabase(): SupabaseClient<Database> {
   return supabaseInstance;
 }
 
-// Backward-compatible export using Proxy for lazy initialization
-export const supabase = new Proxy({} as SupabaseClient<Database>, {
-  get(_, prop) {
-    return (getSupabase() as unknown as Record<string | symbol, unknown>)[prop];
-  },
-});
-
 // Server client for API routes (uses secret key for elevated privileges)
 export function createServerClient(): SupabaseClient<Database> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
