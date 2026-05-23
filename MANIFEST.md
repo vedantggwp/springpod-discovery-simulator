@@ -47,14 +47,21 @@ A high-level file map for cross-session continuity. Updated whenever a file is c
 - `CHANGELOG.md` — Keep-a-Changelog history.
 - `MANIFEST.md` — this file.
 - `LICENSE` — MIT.
-- `README.md` — getting started, scenarios overview, features.
+- `README.md` — getting started, scenarios overview, features, badges, live demo link.
+- `SECURITY.md` — vulnerability reporting + security model (trust boundaries, RLS posture).
+- `CONTRIBUTING.md` — dev setup, conventions, PR process.
 - `.env.example` — env var contract template.
+- `.github/PULL_REQUEST_TEMPLATE.md` — PR checklist (test plan, risk/rollback, conventional commits).
+- `.github/ISSUE_TEMPLATE/bug_report.md` — bug report template.
+- `.github/ISSUE_TEMPLATE/feature_request.md` — feature request template.
+- `docs/RUNBOOK.md` — operational playbook (Supabase pause recovery, migration apply, env contract, escalation).
 - `.planning/REMAINING-WORK-PLAN.md` — operational plan executed for the v1.5.0 release (security + structural cleanup). Kept as a record.
 - `.planning/SESSION-LOG-2026-05-23.md` — high-level session record for the v1.5.0 work.
 - `.planning/codebase/*.md` — architecture, structure, conventions, integrations, testing, concerns docs.
 
 ## Recent changes
 
+- 2026-05-23: Documentation pass for v1.5.0 production readiness: README badges + live-demo prominence + accurate clone instructions + updated project structure; docs/RUNBOOK.md (operational playbook); SECURITY.md (vulnerability reporting + security model); CONTRIBUTING.md (dev setup + conventions); .github/PULL_REQUEST_TEMPLATE.md; .github/ISSUE_TEMPLATE/{bug_report,feature_request}.md; APP_RELEASE in lib/constants.ts bumped to v1.5.0 with new what's-new summary (the live banner was showing stale v1.4.0 text).
 - 2026-05-23: Created `LICENSE` (MIT) — repo is public, needs explicit license.
 - 2026-05-23: Created `MANIFEST.md` — file map per CLAUDE.md convention.
 - 2026-05-23: Created `.planning/SESSION-LOG-2026-05-23.md` — session record.

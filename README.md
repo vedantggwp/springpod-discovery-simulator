@@ -1,8 +1,15 @@
 # Springpod Discovery Simulator
 
+[![Live demo](https://img.shields.io/badge/live%20demo-springpod--discovery--simulator.vercel.app-black?logo=vercel)](https://springpod-discovery-simulator.vercel.app)
+[![Version](https://img.shields.io/github/package-json/v/vedantggwp/springpod-discovery-simulator?label=version)](./CHANGELOG.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
+[![Supabase](https://img.shields.io/badge/Supabase-RLS%20enabled-3FCF8E?logo=supabase)](./SECURITY.md)
+
 An interactive training tool where students practice interviewing virtual clients to uncover business requirements. Features a Space-Grade Mission Control aesthetic (glassmorphism, parallax space background) and AI-powered conversations.
 
-**Version:** 1.4.0
+> **Try it live:** https://springpod-discovery-simulator.vercel.app  
+> **Latest release:** v1.5.0 (security + resilience + structural cleanup — see [CHANGELOG](./CHANGELOG.md))
 
 ## Overview
 
@@ -20,8 +27,8 @@ Students select from three fictional client scenarios and conduct discovery inte
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
-cd client-AI-chat-bot
+git clone https://github.com/vedantggwp/springpod-discovery-simulator.git
+cd springpod-discovery-simulator
 
 # Install dependencies
 npm install
@@ -102,42 +109,68 @@ Each scenario has hidden requirements that students must discover through effect
 
 ```
 ├── app/
-│   ├── api/chat/route.ts    # AI streaming endpoint
-│   ├── globals.css          # Global styles + reduced motion
-│   ├── layout.tsx           # Root layout with fonts
-│   ├── loading.tsx          # Route-level loading UI (skeleton cards)
-│   └── page.tsx             # Main page with state
+│   ├── api/chat/route.ts        # AI streaming endpoint (validates input via parseChatRequest,
+│   │                              resolves scenario via resolveSystemPrompt with DB→hardcoded fallback,
+│   │                              emits structured JSON errors with stable codes)
+│   ├── globals.css              # Global styles + reduced motion
+│   ├── layout.tsx               # Root layout with fonts
+│   ├── loading.tsx              # Route-level loading UI (skeleton cards)
+│   └── page.tsx                 # Main page with state
 ├── components/
-│   ├── SpaceBackground.tsx  # Dynamic space background (nebula + starfield)
-│   ├── Lobby.tsx            # Client engagement selection
-│   ├── ClientBrief.tsx      # Pre-meeting brief
-│   ├── ChatRoom.tsx         # Chat interface
-│   ├── DetailsTracker.tsx   # Progress tracking
-│   ├── HintPanel.tsx        # Consultant hints
-│   ├── Skeleton.tsx         # Loading skeleton (Skeleton, SkeletonCard)
-│   ├── WhatsNewBanner.tsx   # Version / what's new (Lobby top strip)
-│   ├── LedBanner.tsx        # LED-style banner (retained for reuse)
-│   └── ErrorBoundary.tsx    # Error handling
+│   ├── ChatRoom.tsx             # Thin orchestrator (~181 LOC) wiring useChatSession to subcomponents
+│   ├── chat/                    # Subcomponents decomposed from ChatRoom in v1.5.0
+│   │   ├── useChatSession.ts    # Session state hook (messages, persistence, turns, send/reset)
+│   │   ├── BriefModal.tsx       # Pre-chat brief modal
+│   │   ├── ChatComposer.tsx     # Textarea + send + char counter + suggested questions
+│   │   ├── ChatHeader.tsx       # Avatar, name, role, mission clock, turns, view-brief, back
+│   │   ├── ChatTranscript.tsx   # Message list, auto-scroll, typing indicator, markdown render
+│   │   └── SessionFooter.tsx    # Details tracker, end-of-session summary, restart CTA
+│   ├── SpaceBackground.tsx      # Dynamic space background (nebula + starfield)
+│   ├── Lobby.tsx                # Client engagement selection
+│   ├── ClientBrief.tsx          # Pre-meeting brief
+│   ├── DetailsTracker.tsx       # Progress tracking
+│   ├── HintPanel.tsx            # Consultant hints (timer state machine: schedule-cancel-reschedule safe)
+│   ├── Skeleton.tsx             # Loading skeleton (Skeleton, SkeletonCard)
+│   ├── WhatsNewBanner.tsx       # Version / what's new (reads APP_RELEASE from lib/constants)
+│   ├── LedBanner.tsx            # LED-style banner (retained for reuse)
+│   └── ErrorBoundary.tsx        # Error handling
 ├── lib/
-│   ├── scenarios.ts        # Scenario fetch + definitions
-│   ├── supabase.ts         # Supabase clients
-│   ├── ai-config.ts        # AI model config
-│   ├── constants.ts        # Chat limits (message length, max messages)
-│   ├── rate-limit.ts       # Rate limiter (in-memory; Upstash Redis optional)
-│   ├── sessionStorage.ts   # Chat session persistence (localStorage, 30 min)
-│   ├── detailsTracker.ts   # Completion logic
-│   ├── utils.ts            # Helpers (cn, safeImageUrl, safeMarkdownLink)
-│   └── types/database.ts   # DB types
+│   ├── scenarios-data.json      # Single canonical source of scenario rows (DB-shaped)
+│   ├── scenarios-data.ts        # Typed wrapper over the JSON
+│   ├── scenarios.ts             # Legacy Scenario shape + fetchAllScenarios + getScenario
+│   ├── supabase.ts              # getSupabase (client/anon) + createServerClient (server/service_role)
+│   ├── api-errors.ts            # ChatErrorCode enum + jsonError helper (structured API errors)
+│   ├── ai-config.ts             # AI model config (primary, fallback, max tokens, thinking delay)
+│   ├── constants.ts             # Chat limits, system prompt rules, APP_RELEASE banner data
+│   ├── rate-limit.ts            # Rate limiter (in-memory; Upstash Redis optional)
+│   ├── sessionStorage.ts        # Chat session persistence (localStorage, 30 min)
+│   ├── detailsTracker.ts        # Completion logic
+│   ├── utils.ts                 # Helpers (cn, safeImageUrl, safeMarkdownLink)
+│   └── types/database.ts        # DB row types
+├── scripts/
+│   ├── schema.sql               # Postgres schema for scenarios / sessions / messages
+│   ├── migrate.mjs              # Standalone migration runner (uses pg + DATABASE_URL)
+│   └── seed-scenarios.mjs       # Idempotent bulk-upsert seed from scenarios-data.json
+├── supabase/
+│   └── migrations/              # Tracked SQL migrations (e.g., RLS enable)
 ├── docs/
+│   ├── RUNBOOK.md               # Operational playbook (Supabase pause recovery, deploy, env contract)
+│   ├── VERSIONING.md            # Versioning policy & release checklist
 │   ├── UNIFIED-IMPLEMENTATION-PLAN.md  # Implementation order & version roadmap
-│   ├── FEATURE-MAP.md      # Product spec, API reference, integration
-│   ├── PLAN.md             # Current plan
-│   ├── VERSIONING.md       # Versioning policy & release checklist
-│   ├── plans/              # Design notes (chat-history, prompt-engineering, etc.)
-│   └── archive/            # Historical plans (PLAN, RECOMMENDATIONS, V1.2)
-├── CHANGELOG.md            # Version history
-├── eslint.config.mjs       # ESLint 9 flat config (next/core-web-vitals)
-└── .env.example            # Environment template
+│   ├── FEATURE-MAP.md           # Product spec, API reference, integration
+│   ├── PLAN.md                  # Current plan
+│   ├── plans/                   # Design notes (chat-history, prompt-engineering, etc.)
+│   └── archive/                 # Historical plans
+├── .github/
+│   ├── PULL_REQUEST_TEMPLATE.md
+│   └── ISSUE_TEMPLATE/
+├── CHANGELOG.md                 # Version history (Keep a Changelog format)
+├── MANIFEST.md                  # File map for cross-session continuity
+├── SECURITY.md                  # Vulnerability reporting + security model
+├── CONTRIBUTING.md              # Dev setup, conventions, PR process
+├── LICENSE                      # MIT
+├── eslint.config.mjs            # ESLint 9 flat config (next/core-web-vitals + Node override for scripts)
+└── .env.example                 # Environment template
 ```
 
 ## Deployment
@@ -171,18 +204,31 @@ Ensure your platform supports:
 
 ### Customization
 
-- **Scenarios**: Edit `lib/scenarios.ts` or seed via Supabase; turn limit and required details live in scenario data
-- **Message limit**: `lib/constants.ts` — `CHAT_LIMITS.MAX_MESSAGE_LENGTH` (500)
-- **Thinking delay**: `lib/ai-config.ts` — `thinkingDelayMs`
-- **Theme colors**: `tailwind.config.ts`
+- **Scenarios**: edit [`lib/scenarios-data.json`](./lib/scenarios-data.json) — single canonical source consumed by both the runtime fallback (`lib/scenarios.ts`) and the seed script (`scripts/seed-scenarios.mjs`). Add a row, update the `ScenarioId` type, and re-run the seed.
+- **Message limit**: [`lib/constants.ts`](./lib/constants.ts) — `CHAT_LIMITS.MAX_MESSAGE_LENGTH` (500)
+- **Thinking delay**: [`lib/ai-config.ts`](./lib/ai-config.ts) — `thinkingDelayMs`
+- **Theme colors**: [`tailwind.config.ts`](./tailwind.config.ts)
+- **API error codes**: [`lib/api-errors.ts`](./lib/api-errors.ts) — extend `ChatErrorCode` if you add new failure modes; map the new code in `ChatRoom`'s error display.
+
+## Operations
+
+For anyone on-call or about to touch infrastructure:
+
+- **[docs/RUNBOOK.md](./docs/RUNBOOK.md)** – Triage chat issues, recover a paused Supabase project, apply migrations, env contract, escalation.
+- **[SECURITY.md](./SECURITY.md)** – Trust boundaries, RLS posture, vulnerability reporting.
+- **Live status:** [Vercel](https://www.vercel-status.com) · [Supabase](https://status.supabase.com) · [OpenRouter](https://status.openrouter.ai)
 
 ## Documentation
 
-- [CHANGELOG.md](CHANGELOG.md) – Version history (what changed and when)
-- [docs/VERSIONING.md](docs/VERSIONING.md) – Versioning policy and release checklist
-- [docs/UNIFIED-IMPLEMENTATION-PLAN.md](docs/UNIFIED-IMPLEMENTATION-PLAN.md) – Implementation order and version roadmap
-- [docs/FEATURE-MAP.md](docs/FEATURE-MAP.md) – Product spec, API reference, integration
-- [docs/archive/](docs/archive/) – Archived plans (PLAN, RECOMMENDATIONS, V1.2)
+- [CHANGELOG.md](./CHANGELOG.md) – Version history (what changed and when)
+- [MANIFEST.md](./MANIFEST.md) – File map for cross-session continuity
+- [CONTRIBUTING.md](./CONTRIBUTING.md) – Dev setup, commit conventions, PR process
+- [SECURITY.md](./SECURITY.md) – Security model + how to report a vulnerability
+- [docs/RUNBOOK.md](./docs/RUNBOOK.md) – Operational playbook
+- [docs/VERSIONING.md](./docs/VERSIONING.md) – Versioning policy and release checklist
+- [docs/UNIFIED-IMPLEMENTATION-PLAN.md](./docs/UNIFIED-IMPLEMENTATION-PLAN.md) – Implementation order and version roadmap
+- [docs/FEATURE-MAP.md](./docs/FEATURE-MAP.md) – Product spec, API reference, integration
+- [docs/archive/](./docs/archive/) – Archived plans
 
 ## Development
 

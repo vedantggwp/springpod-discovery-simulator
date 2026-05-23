@@ -81,7 +81,7 @@ export function getDisplayContentIfEndMeeting(content: string): {
 
 /** App version and release info for banner and footer. Update when releasing. */
 export const APP_RELEASE = {
-  VERSION: "1.4.0",
-  LAST_UPDATED: "2 Feb 2026",
-  WHATS_NEW_SUMMARY: "Quality & resilience: ESLint 9 flat config, loading skeleton, session persistence (Resume?), hint copy. Performance: avatar fix, Upstash rate limiting optional.",
+  VERSION: "1.5.0",
+  LAST_UPDATED: "23 May 2026",
+  WHATS_NEW_SUMMARY: "Security: Row Level Security on all tables. Resilience: chat survives Supabase outages via hardcoded fallback. Structure: ChatRoom decomposed (672→181 LOC), structured JSON error codes, single canonical scenarios source.",
 } as const;
