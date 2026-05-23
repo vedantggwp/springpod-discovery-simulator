@@ -7,9 +7,10 @@ import ReactMarkdown from "react-markdown";
 import { getContactPhotoUrl } from "@/lib/scenarios";
 import { getCompletionStatus, getNewlyObtainedDetails } from "@/lib/detailsTracker";
 import { cn, safeImageUrl, safeMarkdownLink } from "@/lib/utils";
-import { CHAT_LIMITS, getDisplayContentIfEndMeeting } from "@/lib/constants";
+import { getDisplayContentIfEndMeeting } from "@/lib/constants";
 import { AI_CONFIG } from "@/lib/ai-config";
 import { BriefModal } from "./chat/BriefModal";
+import { ChatComposer } from "./chat/ChatComposer";
 import { useChatSession } from "./chat/useChatSession";
 import { DetailsTracker } from "./DetailsTracker";
 import { HintPanel } from "./HintPanel";
@@ -32,7 +33,6 @@ interface ChatRoomProps {
 export function ChatRoom({ scenario, onBack, restoredMessages }: ChatRoomProps) {
   const prefersReducedMotion = useReducedMotion();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const briefModalTriggerRef = useRef<HTMLButtonElement>(null);
   const [showBriefModal, setShowBriefModal] = useState(false);
   const [uncoveredLabel, setUncoveredLabel] = useState<string | null>(null);
@@ -56,6 +56,7 @@ export function ChatRoom({ scenario, onBack, restoredMessages }: ChatRoomProps) 
     isLastQuestion,
     maxTurns,
     resetSession,
+    charLimit,
   } = useChatSession(scenario, restoredMessages);
 
   // Contact photo URL - sanitize DB value (https only) or fallback to DiceBear
@@ -99,11 +100,6 @@ export function ChatRoom({ scenario, onBack, restoredMessages }: ChatRoomProps) 
     setShowBriefModal(false);
     requestAnimationFrame(() => briefModalTriggerRef.current?.focus());
   }, []);
-
-  const handleSubmitWithFocus = (e?: React.FormEvent) => {
-    handleSubmit(e);
-    requestAnimationFrame(() => inputRef.current?.focus());
-  };
 
   return (
     <div className="h-[100dvh] w-full max-w-2xl mx-auto flex flex-col glass-card border-x border-white/10">
@@ -365,96 +361,15 @@ export function ChatRoom({ scenario, onBack, restoredMessages }: ChatRoomProps) 
           </button>
         </div>
       ) : (
-        <form
-          onSubmit={handleSubmitWithFocus}
-          className="flex flex-col gap-1 px-4 py-3 border-t border-white/10 glass-card"
-        >
-          {/* Last-question nudge */}
-          {isLastQuestion ? (
-            <p className="font-body text-sm text-amber-400 text-center mb-1" role="status">
-              Last question — make it count!
-            </p>
-          ) : null}
-
-          {/* Suggested starters (only before first message) */}
-          {isFirstMessage && !isLoading ? (
-            <div className="flex flex-wrap gap-2 mb-2">
-              {STARTER_PROMPTS.map((prompt) => (
-                <button
-                  key={prompt}
-                  type="button"
-                  onClick={() => {
-                    handleInputChange({ target: { value: prompt } } as React.ChangeEvent<HTMLInputElement>);
-                    inputRef.current?.focus();
-                  }}
-                  className={cn(
-                    "font-body text-sm px-3 py-1.5 rounded-none",
-                    "border border-springpod-green/50 text-gray-400 hover:text-springpod-green hover:border-springpod-green",
-                    "transition-colors focus-visible:ring-2 focus-visible:ring-springpod-green"
-                  )}
-                >
-                  {prompt}
-                </button>
-              ))}
-            </div>
-          ) : null}
-
-          <div className="flex items-center gap-2">
-            <span
-              className="font-body text-springpod-green text-xl shrink-0"
-              aria-hidden="true"
-            >
-              &gt;
-            </span>
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={handleInputChange}
-              placeholder="Ask a question…"
-              disabled={isLoading}
-              maxLength={CHAT_LIMITS.MAX_MESSAGE_LENGTH}
-              aria-label="Type your interview question"
-              aria-describedby={input.length > 0 ? "char-count" : undefined}
-              className={cn(
-                "flex-1 bg-transparent border-none outline-none min-w-0",
-                "font-body text-base text-white placeholder:text-gray-600",
-                "focus-visible:ring-0",
-                "disabled:opacity-50 disabled:cursor-not-allowed"
-              )}
-            />
-            <button
-              type="submit"
-              disabled={isLoading || !input.trim()}
-              aria-label="Send message"
-              className={cn(
-                "font-heading text-sm text-springpod-green shrink-0",
-                "px-3 py-1 border border-springpod-green shadow-green-glow",
-                "hover:bg-springpod-green hover:text-black transition-colors",
-                "disabled:opacity-50 disabled:cursor-not-allowed",
-                "focus-visible:ring-2 focus-visible:ring-springpod-green"
-              )}
-            >
-              SEND
-            </button>
-          </div>
-          {input.length > 0 ? (
-            <div
-              id="char-count"
-              className={cn(
-                "font-body text-sm text-right pr-12",
-                input.length >= CHAT_LIMITS.MAX_MESSAGE_LENGTH
-                  ? "text-amber-400"
-                  : input.length >= CHAT_LIMITS.MAX_MESSAGE_LENGTH - 100
-                    ? "text-gray-500"
-                    : "text-gray-600"
-              )}
-              aria-live="polite"
-            >
-              {input.length}/{CHAT_LIMITS.MAX_MESSAGE_LENGTH}
-            </div>
-          ) : null}
-        </form>
+        <ChatComposer
+          input={input}
+          onInputChange={handleInputChange}
+          onSend={handleSubmit}
+          isDisabled={isLoading}
+          isLastQuestion={isLastQuestion}
+          charLimit={charLimit}
+          suggestedQuestions={isFirstMessage ? STARTER_PROMPTS : undefined}
+        />
       )}
 
       {/* Mission Clock: questions counter + telemetry (pulse on count change) */}
