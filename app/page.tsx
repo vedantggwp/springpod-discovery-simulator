@@ -7,44 +7,57 @@ import { Lobby } from "@/components/Lobby";
 import { ClientBrief } from "@/components/ClientBrief";
 import { ChatRoom } from "@/components/ChatRoom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { fetchAllScenarios, type ScenarioV2 } from "@/lib/scenarios";
+import { fetchAllScenarios, getFallbackScenarios, type ScenarioV2 } from "@/lib/scenarios";
 import { getSession, clearSession, type StoredSession } from "@/lib/sessionStorage";
 
 type ViewState = "lobby" | "brief" | "chat";
 
+const ENABLE_REMOTE_SCENARIO_REFRESH = process.env.NEXT_PUBLIC_ENABLE_REMOTE_SCENARIOS === "true";
+
 export default function Home() {
   const [view, setView] = useState<ViewState>("lobby");
-  const [scenarios, setScenarios] = useState<ScenarioV2[]>([]);
+  const [scenarios, setScenarios] = useState<ScenarioV2[]>(() => getFallbackScenarios());
   const [selectedScenario, setSelectedScenario] = useState<ScenarioV2 | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingResumeSession, setPendingResumeSession] = useState<StoredSession | null>(null);
   const [restoredMessagesForChat, setRestoredMessagesForChat] = useState<Message[] | null>(null);
   const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
+    if (!ENABLE_REMOTE_SCENARIO_REFRESH) return;
+
     async function loadScenarios() {
       try {
-        setIsLoading(true);
         setError(null);
         const data = await fetchAllScenarios();
-        setScenarios(data);
+        if (!cancelled) {
+          setScenarios(data);
+        }
       } catch (err) {
-        console.error("Failed to load scenarios:", err);
-        setError("Failed to load client engagements. Please refresh the page.");
-      } finally {
-        setIsLoading(false);
+        if (!cancelled) {
+          console.warn("Using bundled scenarios after remote scenario refresh failed:", err);
+        }
       }
     }
+
+    let cancelled = false;
     loadScenarios();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // After scenarios load, check for a valid stored session (30 min expiry)
   useEffect(() => {
-    if (isLoading || scenarios.length === 0) return;
-    const session = getSession();
-    if (session) setPendingResumeSession(session);
-  }, [isLoading, scenarios.length]);
+    const timeoutId = window.setTimeout(() => {
+      setPendingResumeSession(getSession());
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, []);
 
   const handleSelectScenario = (scenarioId: string) => {
     const scenario = scenarios.find((s) => s.id === scenarioId);

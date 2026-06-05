@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { memo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -168,6 +169,25 @@ export function Lobby({ scenarios, onSelect, isLoading }: LobbyProps) {
       >
         Review the client brief, then meet with your contact to discover their real business problem.
       </motion.p>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.22 }}
+        className="mb-6"
+      >
+        <Link
+          href="/workbench"
+          className={cn(
+            "rounded-lg border border-stellar-cyan/60 bg-stellar-cyan/10 px-4 py-2",
+            "font-heading text-xs uppercase tracking-widest text-stellar-cyan",
+            "transition hover:bg-stellar-cyan hover:text-black",
+            "focus-visible:ring-2 focus-visible:ring-stellar-cyan"
+          )}
+        >
+          Open Reliability Workbench
+        </Link>
+      </motion.div>
 
       {/* What you can do (orientation): higher contrast */}
       <motion.div

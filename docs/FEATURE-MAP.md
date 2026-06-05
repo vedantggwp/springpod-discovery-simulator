@@ -42,8 +42,9 @@ A **Virtual Client Interaction System** that enables students to practice profes
 2. **Scalable Training** - One AI can train unlimited students simultaneously
 3. **Consistent Experience** - Every student gets same quality interaction
 4. **Instant Availability** - 24/7 access, no scheduling needed
-5. **Progress Tracking** - Measure skill development objectively
+5. **Progress Tracking** - Track discovery coverage with deterministic heuristics
 6. **Gamification** - Engaging, game-like experience increases completion
+7. **Reliability Workbench** - Inspect simulated-agent prompts and responses for hidden-fact leakage, role breaks, and rubric evidence before making public claims
 
 ---
 
@@ -144,7 +145,7 @@ Students develop these professional skills:
 | **Styling** | Tailwind CSS | Utility-first CSS |
 | **AI Integration** | Vercel AI SDK | Streaming responses |
 | **AI Provider** | OpenRouter | Multi-model access |
-| **AI Model** | Claude 3.5 Sonnet | Natural conversation |
+| **AI Model** | Claude 3 Haiku primary, Claude 3.5 Sonnet fallback | Cost-aware natural conversation |
 | **Animations** | Framer Motion | Smooth UI transitions |
 | **Markdown** | react-markdown | Rich text rendering |
 | **Avatars** | DiceBear | Pixel art characters |
@@ -175,6 +176,22 @@ Students develop these professional skills:
      │◀───────────────│                │                │
      │                │                │                │
 ```
+
+### Reliability Workbench Flow
+
+```
+┌──────────────┐     ┌────────────────┐     ┌──────────────────┐     ┌──────────────┐
+│ Scenario     │     │ Prompt/response │     │ Deterministic    │     │ Reliability  │
+│ contract     │────▶│ input           │────▶│ guards/scorers   │────▶│ report       │
+└──────────────┘     └────────────────┘     └──────────────────┘     └──────────────┘
+       │                     │                       │                        │
+       ▼                     ▼                       ▼                        ▼
+  visible/hidden        local only; no          leakage, format,        score, findings,
+  facts + reveal        transcript storage      prompt risk,            probes, limitations
+  rules                                        evidence checks
+```
+
+The workbench is deterministic and local-first in the MVP. It does not certify safety or call a live model for arbitrary public prompt tests.
 
 ---
 
@@ -422,7 +439,7 @@ const MAX_TURNS = 15;  // Configurable per scenario
 
 ---
 
-### Feature 5: 8-Bit Retro Theme
+### Feature 5: Space-Grade Mission Control Theme
 
 **Purpose:** Engaging, memorable visual identity
 
@@ -430,11 +447,11 @@ const MAX_TURNS = 15;  // Configurable per scenario
 
 | Element | Implementation |
 |---------|----------------|
-| **Fonts** | Press Start 2P (headings), VT323 (body) |
-| **Colors** | Terminal green (#22c55e), dark backgrounds |
+| **Fonts** | Geist Mono headings, Geist Sans body |
+| **Colors** | Springpod green, stellar cyan, deep space backgrounds |
 | **Avatars** | DiceBear pixel-art style |
-| **Animations** | Blinking cursor, fade-in messages |
-| **Scrollbar** | Custom green terminal style |
+| **Animations** | Reduced-motion-aware transitions, parallax stars, LED-style highlights |
+| **Surfaces** | Glass panels, corner brackets, readable evidence-first cards |
 
 **Accessibility Considerations:**
 - High contrast ratios

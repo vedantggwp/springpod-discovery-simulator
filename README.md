@@ -8,8 +8,14 @@
 
 An interactive training tool where students practice interviewing virtual clients to uncover business requirements. Features a Space-Grade Mission Control aesthetic (glassmorphism, parallax space background) and AI-powered conversations.
 
+The proof artifact is the combination: roleplay clients with withheld requirements, eval-facing scenario contracts, response guards, prompt-risk checks, and clear limitations. It is designed to show how an AI product can be made measurable without overstating what deterministic checks prove.
+
 > **Try it live:** https://springpod-discovery-simulator.vercel.app  
 > **Latest release:** v1.5.0 (security + resilience + structural cleanup — see [CHANGELOG](./CHANGELOG.md))
+
+**Live app:** [springpod-discovery-simulator.vercel.app](https://springpod-discovery-simulator.vercel.app)
+
+> Note: `/workbench` is available on this branch and will appear on the live app after the branch is deployed/merged.
 
 ## Overview
 
@@ -19,7 +25,7 @@ Students select from three fictional client scenarios and conduct discovery inte
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20.9+
 - npm or yarn
 - OpenRouter API key ([get one here](https://openrouter.ai/keys))
 
@@ -65,18 +71,25 @@ Each scenario has hidden requirements that students must discover through effect
 
 ## Features
 
-### Core Functionality
+### Simulator
 - **Lobby → Brief → Chat** - Select a client engagement, review the brief, then conduct the discovery interview
 - **AI-Powered Conversations** - Realistic client responses (Claude 3 Haiku primary, 3.5 Sonnet fallback)
 - **Turn Limit** - Configurable per scenario; simulates real meeting time pressure
 - **Thinking Delay** - 800ms pause makes responses feel natural
 - **Progress Tracking** - Details tracker and hint panel per scenario
 
-### Security & robustness
+### Reliability Workbench
+- **Scenario contracts** - Visible facts, hidden facts, reveal conditions, forbidden claims, and required evidence are represented as explicit data
+- **Deterministic lint report** - `/workbench` checks pasted prompts and candidate responses for leakage, role breaks, formatting drift, and discovery-evidence signals
+- **Coverage status** - Reports distinguish missing prompt/response coverage from complete supplied inputs
+- **Reviewer-friendly examples** - Load safer and leaking responses to see how the guard layer behaves
+
+### Safety, Security & Robustness
 - **Rate limiting** – 20 requests/min per client on the chat API (429 when exceeded); in-memory by default, optional Upstash Redis for production
 - **Input limits** - 500 characters per user message (assistant messages not limited), max 50 messages per request; safe URLs for images and markdown links
 - **Security headers** - X-Frame-Options, X-Content-Type-Options, Referrer-Policy
 - **Smart errors** - User-facing messages for rate limit, message too long, invalid scenario, and service unavailable; retry without full reload
+- **Local-first workbench** - Pasted prompts/responses are checked in the browser session; the MVP does not store transcripts or call a public model for arbitrary pasted prompts
 
 ### User experience
 - **Session persistence** – Chat survives refresh (localStorage, 30 min); “Resume?” banner when returning to lobby
@@ -138,6 +151,10 @@ Each scenario has hidden requirements that students must discover through effect
 │   ├── scenarios-data.json      # Single canonical source of scenario rows (DB-shaped)
 │   ├── scenarios-data.ts        # Typed wrapper over the JSON
 │   ├── scenarios.ts             # Legacy Scenario shape + fetchAllScenarios + getScenario
+│   ├── scenarioContracts.ts     # Eval-facing visible/hidden facts and reveal rules
+│   ├── responseGuards.ts        # Deterministic leakage/style guard checks
+│   ├── evalScorers.ts           # Prompt-risk and discovery-evidence scoring
+│   ├── reliabilityWorkbench.ts  # Workbench report builder
 │   ├── supabase.ts              # getSupabase (client/anon) + createServerClient (server/service_role)
 │   ├── api-errors.ts            # ChatErrorCode enum + jsonError helper (structured API errors)
 │   ├── ai-config.ts             # AI model config (primary, fallback, max tokens, thinking delay)
@@ -154,6 +171,10 @@ Each scenario has hidden requirements that students must discover through effect
 ├── supabase/
 │   └── migrations/              # Tracked SQL migrations (e.g., RLS enable)
 ├── docs/
+│   ├── REVIEWER-GUIDE.md        # Five-minute reviewer path and verification notes
+│   ├── EVALS.md                 # Reliability Workbench checks and limitations
+│   ├── PUBLIC-READINESS.md      # Public claims, privacy, and launch checklist
+│   ├── DEPLOYMENT.md            # Live URL, env vars, preview checks, rollback notes
 │   ├── RUNBOOK.md               # Operational playbook (Supabase pause recovery, deploy, env contract)
 │   ├── VERSIONING.md            # Versioning policy & release checklist
 │   ├── UNIFIED-IMPLEMENTATION-PLAN.md  # Implementation order & version roadmap
@@ -185,7 +206,7 @@ Each scenario has hidden requirements that students must discover through effect
 ### Other Platforms
 
 Ensure your platform supports:
-- Node.js 18+
+- Node.js 20.9+
 - Serverless functions with 30s timeout
 - Environment variables
 
@@ -224,11 +245,24 @@ For anyone on-call or about to touch infrastructure:
 - [MANIFEST.md](./MANIFEST.md) – File map for cross-session continuity
 - [CONTRIBUTING.md](./CONTRIBUTING.md) – Dev setup, commit conventions, PR process
 - [SECURITY.md](./SECURITY.md) – Security model + how to report a vulnerability
+- [docs/REVIEWER-GUIDE.md](./docs/REVIEWER-GUIDE.md) – Five-minute reviewer path and verification notes
+- [docs/EVALS.md](./docs/EVALS.md) – Reliability Workbench checks, files, and limitations
+- [docs/PUBLIC-READINESS.md](./docs/PUBLIC-READINESS.md) – Public claims, privacy defaults, and launch checklist
+- [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) – Live URL, environment variables, preview checks, and rollback notes
 - [docs/RUNBOOK.md](./docs/RUNBOOK.md) – Operational playbook
 - [docs/VERSIONING.md](./docs/VERSIONING.md) – Versioning policy and release checklist
 - [docs/UNIFIED-IMPLEMENTATION-PLAN.md](./docs/UNIFIED-IMPLEMENTATION-PLAN.md) – Implementation order and version roadmap
 - [docs/FEATURE-MAP.md](./docs/FEATURE-MAP.md) – Product spec, API reference, integration
 - [docs/archive/](./docs/archive/) – Archived plans
+
+## Current Verification
+
+Last verified locally on 2026-06-05:
+
+- `npm run test` – 9 files, 74 tests passed
+- `npm run lint` – 0 errors, 5 existing warnings
+- `npm run build` – passed; `/` and `/workbench` prerendered
+- Production smoke – `/` renders bundled scenario cards, `/workbench` generates a deterministic lint report
 
 ## Development
 
