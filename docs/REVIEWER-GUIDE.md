@@ -37,8 +37,8 @@ Then smoke test:
 
 Last verified locally on 2026-06-05:
 
-- `npm run test`: 9 files, 75 tests passed,
-- `npm run lint`: 0 errors, 4 existing `<img>` warnings,
+- `npm run test`: 9 files, 74 tests passed,
+- `npm run lint`: 0 errors, 5 existing warnings,
 - `npm run build`: passed, with `/` and `/workbench` prerendered,
 - `/` renders bundled scenario cards without database access,
 - `/workbench` can generate a deterministic lint report.
