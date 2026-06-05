@@ -9,7 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_No unreleased changes._
+### Added
+- **Reliability Workbench** – New `/workbench` route for deterministic hidden-state simulated-agent checks. Users can inspect scenario contracts, paste prompt/response text, run leakage/style/discovery-evidence checks, view a readiness report, and copy a Markdown summary.
+- **Eval-facing contracts and guards** – Added scenario contracts, response guards, prompt-risk scoring, discovery-evidence scoring, and a report builder.
+- **Public-readiness docs** – Added `docs/EVALS.md` and `docs/PUBLIC-READINESS.md` with limitations, privacy defaults, and verification guidance.
+
+### Technical
+- Added unit/component coverage for scenario contracts, response guards, eval scorers, workbench report generation, and the public workbench UI.
 
 ---
 

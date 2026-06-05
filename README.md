@@ -1,8 +1,14 @@
 # Springpod Discovery Simulator
 
-An interactive training tool where students practice interviewing virtual clients to uncover business requirements. Features a Space-Grade Mission Control aesthetic (glassmorphism, parallax space background) and AI-powered conversations.
+An interactive hidden-state client simulator where learners practice discovery interviews, plus a deterministic Reliability Workbench for inspecting simulated-agent failure modes.
+
+The proof artifact is the combination: roleplay clients with withheld requirements, eval-facing scenario contracts, response guards, prompt-risk checks, and clear limitations. It is designed to show how an AI product can be made measurable without overstating what deterministic checks prove.
 
 **Version:** 1.4.0
+
+**Live app:** [springpod-discovery-simulator.vercel.app](https://springpod-discovery-simulator.vercel.app)
+
+> Note: `/workbench` is available on this branch and will appear on the live app after the branch is deployed/merged.
 
 ## Overview
 
@@ -12,7 +18,7 @@ Students select from three fictional client scenarios and conduct discovery inte
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20.9+
 - npm or yarn
 - OpenRouter API key ([get one here](https://openrouter.ai/keys))
 
@@ -58,18 +64,25 @@ Each scenario has hidden requirements that students must discover through effect
 
 ## Features
 
-### Core Functionality
+### Simulator
 - **Lobby → Brief → Chat** - Select a client engagement, review the brief, then conduct the discovery interview
 - **AI-Powered Conversations** - Realistic client responses (Claude 3 Haiku primary, 3.5 Sonnet fallback)
 - **Turn Limit** - Configurable per scenario; simulates real meeting time pressure
 - **Thinking Delay** - 800ms pause makes responses feel natural
 - **Progress Tracking** - Details tracker and hint panel per scenario
 
-### Security & robustness
+### Reliability Workbench
+- **Scenario contracts** - Visible facts, hidden facts, reveal conditions, forbidden claims, and required evidence are represented as explicit data
+- **Deterministic lint report** - `/workbench` checks pasted prompts and candidate responses for leakage, role breaks, formatting drift, and discovery-evidence signals
+- **Coverage status** - Reports distinguish missing prompt/response coverage from complete supplied inputs
+- **Reviewer-friendly examples** - Load safer and leaking responses to see how the guard layer behaves
+
+### Safety, Security & Robustness
 - **Rate limiting** – 20 requests/min per client on the chat API (429 when exceeded); in-memory by default, optional Upstash Redis for production
 - **Input limits** - 500 characters per user message (assistant messages not limited), max 50 messages per request; safe URLs for images and markdown links
 - **Security headers** - X-Frame-Options, X-Content-Type-Options, Referrer-Policy
 - **Smart errors** - User-facing messages for rate limit, message too long, invalid scenario, and service unavailable; retry without full reload
+- **Local-first workbench** - Pasted prompts/responses are checked in the browser session; the MVP does not store transcripts or call a public model for arbitrary pasted prompts
 
 ### User experience
 - **Session persistence** – Chat survives refresh (localStorage, 30 min); “Resume?” banner when returning to lobby
@@ -120,6 +133,10 @@ Each scenario has hidden requirements that students must discover through effect
 │   └── ErrorBoundary.tsx    # Error handling
 ├── lib/
 │   ├── scenarios.ts        # Scenario fetch + definitions
+│   ├── scenarioContracts.ts # Eval-facing visible/hidden facts and reveal rules
+│   ├── responseGuards.ts   # Deterministic leakage/style guard checks
+│   ├── evalScorers.ts      # Prompt-risk and discovery-evidence scoring
+│   ├── reliabilityWorkbench.ts # Workbench report builder
 │   ├── supabase.ts         # Supabase clients
 │   ├── ai-config.ts        # AI model config
 │   ├── constants.ts        # Chat limits (message length, max messages)
@@ -129,6 +146,8 @@ Each scenario has hidden requirements that students must discover through effect
 │   ├── utils.ts            # Helpers (cn, safeImageUrl, safeMarkdownLink)
 │   └── types/database.ts   # DB types
 ├── docs/
+│   ├── EVALS.md            # Reliability Workbench checks and limitations
+│   ├── PUBLIC-READINESS.md # Public claims, privacy, and launch checklist
 │   ├── UNIFIED-IMPLEMENTATION-PLAN.md  # Implementation order & version roadmap
 │   ├── FEATURE-MAP.md      # Product spec, API reference, integration
 │   ├── PLAN.md             # Current plan
@@ -152,7 +171,7 @@ Each scenario has hidden requirements that students must discover through effect
 ### Other Platforms
 
 Ensure your platform supports:
-- Node.js 18+
+- Node.js 20.9+
 - Serverless functions with 30s timeout
 - Environment variables
 
@@ -179,10 +198,23 @@ Ensure your platform supports:
 ## Documentation
 
 - [CHANGELOG.md](CHANGELOG.md) – Version history (what changed and when)
+- [docs/REVIEWER-GUIDE.md](docs/REVIEWER-GUIDE.md) – Five-minute reviewer path and verification notes
+- [docs/EVALS.md](docs/EVALS.md) – Reliability Workbench checks, files, and limitations
+- [docs/PUBLIC-READINESS.md](docs/PUBLIC-READINESS.md) – Public claims, privacy defaults, and launch checklist
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) – Live URL, environment variables, preview checks, and rollback notes
 - [docs/VERSIONING.md](docs/VERSIONING.md) – Versioning policy and release checklist
 - [docs/UNIFIED-IMPLEMENTATION-PLAN.md](docs/UNIFIED-IMPLEMENTATION-PLAN.md) – Implementation order and version roadmap
 - [docs/FEATURE-MAP.md](docs/FEATURE-MAP.md) – Product spec, API reference, integration
 - [docs/archive/](docs/archive/) – Archived plans (PLAN, RECOMMENDATIONS, V1.2)
+
+## Current Verification
+
+Last verified locally on 2026-06-05:
+
+- `npm run test` – 9 files, 75 tests passed
+- `npm run lint` – 0 errors, 4 existing `<img>` warnings
+- `npm run build` – passed; `/` and `/workbench` prerendered
+- Production smoke – `/` renders bundled scenario cards, `/workbench` generates a deterministic lint report
 
 ## Development
 

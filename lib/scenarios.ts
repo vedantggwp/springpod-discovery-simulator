@@ -44,13 +44,16 @@ export async function fetchAllScenarios(): Promise<ScenarioV2[]> {
       .order("id");
 
     if (error) {
-      console.error("Error fetching scenarios:", error);
       throw error;
     }
 
-    return (data || []).map(transformDBScenario);
+    if (!data || data.length === 0) {
+      return getFallbackScenarios();
+    }
+
+    return data.map(transformDBScenario);
   } catch {
-    return getAllScenarios().map(legacyToScenarioV2);
+    return getFallbackScenarios();
   }
 }
 
@@ -268,6 +271,10 @@ export function getScenario(id: ScenarioId): Scenario {
 
 export function getAllScenarios(): Scenario[] {
   return Object.values(hardcodedScenarios);
+}
+
+export function getFallbackScenarios(): ScenarioV2[] {
+  return getAllScenarios().map(legacyToScenarioV2);
 }
 
 // Export hardcoded scenarios for API route fallback
